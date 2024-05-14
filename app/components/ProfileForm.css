@@ -1,0 +1,56 @@
+.profile-form {
+  max-width: 600px;
+   margin: 40px auto; 
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.form-title {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 24px;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="number"],
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.submit-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 18px;
+}
+@media (max-width: 599px) {
+  .profile-form {
+     margin: 0; /* Set margin to 0 for mobile devices */
+   }
+  }

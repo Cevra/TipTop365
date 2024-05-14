@@ -15,6 +15,111 @@
     --background-end-rgb: 0, 0, 0;
   }
 }
+/* Add this to your global CSS file */
+.bg-custom-mobile:root {
+  --bg-color: #02404B; /* Your desired background color */
+}
+
+@media (min-width: 768px) { /* Adjust the breakpoint as needed */
+  :root {
+    --bg-color: #FFFFFF; /* Background color for larger screens */
+  }
+}
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Arrows for navigation */
+.scroll-container {
+  display: flex;
+  overflow-x: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.scroll-arrow {
+  width: 20px;
+  height: 20px;
+  background: #ccc;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.scroll-arrow:hover {
+  background: #999;
+}
+
+/* Fade effect */
+.fade {
+  transition: opacity 0.3s ease;
+}
+
+.fade:hover {
+  opacity: 0.5;
+}
+/* Adjustments for the recommended posts section */
+.recommended-posts {
+  background-color: var(--bg-primary); /* Assuming --bg-primary is your primary color */
+  padding: 20px; /* Increase padding for a bigger section */
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+.recommended-posts::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari, and Opera */
+}
+
+/* Adjustments for the posts within the recommended posts section */
+.recommended-post {
+  background-color: #fff; /* White background for posts */
+  padding: 20px; /* Padding for each post */
+  margin-right: 20px; /* Margin between posts */
+  border-radius: 10px; /* Rounded corners for each post */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow for depth */
+}
+/* Hide scrollbar for Chrome, Safari, and Opera */
+/* Hide scrollbar for Chrome, Safari, and Opera */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+
+
 
 body {
   color: rgb(var(--foreground-rgb));
