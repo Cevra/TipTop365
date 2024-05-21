@@ -23,19 +23,27 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-primary  flex items-center justify-center">
-      <div className="bg-white  sm:bg-primary p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4">Sign In</h2>
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder="Email" />
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mt-4">Password</label>
-          <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder="Password" />
-          <button onClick={handleSignInWithEmail} className="mt-4 w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Sign In</button>
-        </div>
-        <Link href="/signUp" className="mt-4 block text-center text-sm text-blue-600 hover:text-blue-800">Don't have an account? Sign Up</Link>
+    // <div className="min-h-screen bg-primary  flex items-center justify-center">
+    //   <div className="bg-white  sm:bg-primary p-8 rounded shadow-md w-full max-w-md">
+    //     <h2 className="text-2xl font-bold mb-4">Sign In</h2>
+    //     <div>
+    //       <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+    //       <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder="Email" />
+    //       <label htmlFor="password" className="block text-sm font-medium text-gray-700 mt-4">Password</label>
+    //       <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder="Password" />
+    //       <button onClick={handleSignInWithEmail} className="mt-4 w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Sign In</button>
+    //     </div>
+    //     <Link href="/signUp" className="mt-4 block text-center text-sm text-blue-600 hover:text-blue-800">Don't have an account? Sign Up</Link>
+    //   </div>
+    // </div>
+    <div className="min-h-screen bg-gradient-to-r from-green-400 via-purple-500 to-pink-500 flex items-center justify-center">
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md text-center">
+        <h1 className="text-6xl font-bold mb-4">COMING SOON</h1>
+        <p className="text-xl font-semibold mb-8">Our website is currently under construction. Please check back later!</p>
+        
       </div>
     </div>
+
   );
 };
 
