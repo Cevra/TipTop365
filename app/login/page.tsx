@@ -23,8 +23,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+    <div className="min-h-screen bg-primary  flex items-center justify-center">
+      <div className="bg-white  sm:bg-primary p-8 rounded shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-4">Sign In</h2>
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>

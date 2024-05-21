@@ -1,40 +1,60 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // Import useState
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/firebaseConfig'; 
 import NavBar from './components/NavBar';
+import { collection, getDocs, query, DocumentData } from "firebase/firestore"; // Import Firestore functions
+import { db } from '@/firebaseConfig'; // Adjust the path based on your project structure
+import { Profile, ProfileData } from './models/Profile';
 
 export default function Home() {
   const router = useRouter();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profiles, setProfiles] = useState<ProfileData[]>([]);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.push('/')
+        router.push('/');
       } else {
         router.push('/login');
       }
     });
-  }, [router]);
+
+    // Fetch user profiles
+    const fetchProfiles = async () => {
+      const q = query(collection(db, "profiles")); // Query to fetch all profiles
+      const querySnapshot = await getDocs(q);
+      const profilesData = querySnapshot.docs.map(doc => {
+        const rawData = doc.data() as DocumentData;
+        // Attempt to cast rawData to ProfileData. Handle missing fields as needed.
+        return rawData as ProfileData;
+      });
+      setProfiles(profilesData); // Update state with fetched profiles
+    };
+
+    fetchProfiles(); // Call fetchProfiles directly
+  }, [router]); // Ensure this effect runs only when router changes
 
   const goToProfile = () => {
     router.push('/Profile');
   };
 
   return (
-
     <div className="min-h-screen bg-white flex flex-col">
       <NavBar/>
       <div className="flex-grow scrollbar-hide overflow-x-scroll p-4">
         {/* Recommended Posts Section with custom scrollbar and arrows */}
         <div className="scroll-container scrollbar-hide flex space-x-4 scrollbar-hide">
           {/* Simulated Posts */}
-          {[...Array(10)].map((_, index) => (
+          {profiles.map((profile, index) => (
             <div key={index} className="bg-slate-100 p-4 rounded shadow-md fade">
-              <h2 className="text-xl font-bold">Recommended Post {index + 1}</h2>
-              <p>Post content...</p>
+              <h2 className="text-xl font-bold">{profile.name} {profile.surname}</h2>
+              <h2 className="text-xl font-bold">{profile.description}</h2>
+              <p>{profile.pricePerHour} per hour</p>
+              <p>Available: {profile.availableHours} hours per day</p>
             </div>
           ))}
           <div className="scroll-arrow scroll-arrow-left"></div>
@@ -44,11 +64,13 @@ export default function Home() {
       <div className="flex-grow overflow-y-scroll p-4">
         {/* User Profiles Section */}
         <div className="space-y-4">
-          {/* Simulated User Profiles */}
-          {[...Array(20)].map((_, index) => (
+          {/* Render user profiles */}
+          {profiles.map((profile, index) => (
             <div key={index} className="bg-slate-100 p-4 rounded shadow-md fade">
-              <h2 className="text-xl font-bold">User Profile {index + 1}</h2>
-              <p>User profile content...</p>
+              <h2 className="text-xl font-bold">{profile.name} {profile.surname}</h2>
+              <p>{profile.pricePerHour} per hour</p>
+              <p>Available: {profile.availableHours} hours per day</p>
+              <p>{profile.description.substring(0, 100)}...</p>
             </div>
           ))}
         </div>

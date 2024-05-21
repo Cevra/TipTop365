@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import logoImage from '../../public/logo.svg'; // Adjust the path according to your project structure
-
+import Image from 'next/image';
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
@@ -12,12 +12,11 @@ const NavBar = () => {
   };
 
   return (
-    <nav className="bg-[#02404B] w-full z-50">
-      <div className="container mx-auto px-10 py-4 flex justify-between items-center">
+    <nav className="bg-[#02404B] w-full h-20 z-50 items-center">
+      <div className="container mx-auto px-10 py-6 flex justify-between items-center">
         {/* Logo */}
         <Link href="/" passHref>
-          <img src={logoImage} alt="Logo" className="text-white text-xl font-semibold" />
-        </Link>
+        <Image src="/path/to/image.jpg" alt="Description" width={500} height={300} />        </Link>
 
         {/* Mobile Menu Button */}
         <div className="lg:hidden relative">

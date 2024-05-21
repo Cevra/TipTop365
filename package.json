@@ -3,20 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "export": "next export",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/material": "^5.15.17",
+    "@mui/x-date-pickers": "^7.4.0",
+    "dayjs": "^1.11.11",
     "firebase": "^10.11.1",
     "next": "14.2.3",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-time-picker": "^7.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.3.2",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",

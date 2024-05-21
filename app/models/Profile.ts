@@ -12,5 +12,12 @@ export interface Profile {
     description: string;
     // Add other fields as necessary
   }
-  
+  export interface ProfileData {
+    name: string;
+    surname: string;
+    pricePerHour: number;
+    availableHours: string;
+    description: string;
+    // Add other fields as necessary
+  }
   

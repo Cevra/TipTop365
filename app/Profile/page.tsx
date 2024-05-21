@@ -9,6 +9,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { auth } from '@/firebaseConfig'; // Adjust the path based on your project structure
 import { useRouter } from 'next/navigation';
 import NavBar from '../components/NavBar';
+import Image from 'next/image';
 
 const UserProfile = () => {
   const router = useRouter();
@@ -50,8 +51,7 @@ const UserProfile = () => {
 
       <div className="md:flex justify-center items-center">
         <div className=" items-center">
-          <img className="h-48 w-full object-cover md:w-48" src="profile-placeholder.jpg" alt="Profile picture" />
-        </div>
+        <Image src="/path/to/image.jpg" alt="Description" width={500} height={300} />        </div>
         <div className="p-8">
           <div className="text-center uppercase tracking-wide text-sm text-indigo-500 font-semibold">{profile.name}'s Profile</div>
           <p className="mt-2 text-center text-gray-500 font-bold">{profile.surname}</p>
