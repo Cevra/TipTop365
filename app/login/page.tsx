@@ -36,7 +36,7 @@ const Login = () => {
     //     <Link href="/signUp" className="mt-4 block text-center text-sm text-blue-600 hover:text-blue-800">Don't have an account? Sign Up</Link>
     //   </div>
     // </div>
-    <div className="min-h-screen bg-gradient-to-r from-green-400 via-purple-500 to-pink-500 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-r from-green-800 via-purple-800 to-blue-700 flex items-center justify-center">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md text-center">
         <h1 className="text-6xl font-bold mb-4">COMING SOON</h1>
         <p className="text-xl font-semibold mb-8">Our website is currently under construction. Please check back later!</p>
