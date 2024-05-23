@@ -89,7 +89,7 @@ const Login = () => {
             
               type="email"
               name="email"
-              
+              autoComplete="email"
               required
               className="w-full px-4 py-3 sm:mt-10 mt-12 sm:px-4  border-slate-100  border-collapse-0 bg-zinc-100 rounded-[62px] justify-start items-start inline-flex"
               placeholder="E-mail adresa"
