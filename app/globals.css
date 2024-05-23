@@ -118,6 +118,15 @@
 .scrollbar-hide {
   scrollbar-width: none;
 }
+.navbar-over-image {
+  z-index: 10; /* Adjust as needed */
+}
+/* Global Stylesheet */
+.navbar {
+  --navbar-width: 1439px; /* Custom property for navbar width */
+  --navbar-height: 100px; /* Custom property for navbar height */
+  background: linear-gradient(180deg, #FFF 0%, rgba(255, 255, 255, 0.00) 100%); /* Linear gradient fill */
+}
 
 
 
