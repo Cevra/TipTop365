@@ -10,6 +10,7 @@ import logoImage from "../../public/logolight.svg";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import Image from "next/image";
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 const Login = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -26,13 +27,14 @@ const Login = () => {
   };
   const handleSaveEmail = async () => {
     try {
-      // Save the email to Firestore
-      await addDoc(collection(db, "potential customers"), {
+      const auth = getAuth();
+      console.log(auth);
+      const docRef = await addDoc(collection(db, "potential customers"), {
         email: email,
-        timestamp: Date.now(), // Using JavaScript Date object for simplicity
+        timestamp: Date.now(),
       });
+      console.log("Document written with ID: ", docRef.id);
       alert("Vaš mail je sačuvan!");
-      // Optionally redirect or show success message
     } catch (error) {
       console.error("Error saving email to Firestore:", error);
       alert("Failed to save email.");
