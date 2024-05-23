@@ -17,12 +17,14 @@ export default function Home() {
   const [profiles, setProfiles] = useState<ProfileData[]>([]);
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push('/');
-      } else {
-        router.push('/login');
-      }
+     router.push('/login');
+
+    // onAuthStateChanged(auth, (user) => {
+    //   if (user) {
+    //     router.push('/');
+    //   } else {
+    //     router.push('/login');
+    //   }
     });
 
     // Fetch user profiles
