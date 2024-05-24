@@ -34,7 +34,7 @@ const Login = () => {
   
   const handleSaveEmail = async () => {
     if (!isValidEmail(email)) {
-      alert("Invalid email address. Please enter a valid email.");
+      alert("Neispravan email, molimo vas unesite pravilan email.");
       return;
     }
 
@@ -49,7 +49,7 @@ const Login = () => {
     });
   
     if (emailExists) {
-      alert("This email address is already registered.");
+      alert("Ovaj mail vec postoji u nasoj bazi.");
       return;
     }
 
@@ -65,7 +65,7 @@ const Login = () => {
       setEmail("");
     } catch (error) {
       console.error("Error saving email to Firestore:", error);
-      alert("Failed to save email.");
+      alert("Email nije sacuvan.");
     }
   };
   
