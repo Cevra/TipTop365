@@ -7,7 +7,7 @@ import { signInWithEmail } from "@/utils/auth";
 import { auth } from "@/firebaseConfig"; // Adjust the import path as necessary
 import Link from "next/link";
 import logoImage from "../../public/logolight.svg";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import Image from "next/image";
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -37,6 +37,22 @@ const Login = () => {
       alert("Invalid email address. Please enter a valid email.");
       return;
     }
+
+    const potentialCustomersCollection = collection(db, "potential customers");
+    const querySnapshot = await getDocs(potentialCustomersCollection);
+  
+    let emailExists = false;
+    querySnapshot.forEach((doc) => {
+      if (doc.data().email === email) {
+        emailExists = true;
+      }
+    });
+  
+    if (emailExists) {
+      alert("This email address is already registered.");
+      return;
+    }
+
     try {
       const auth = getAuth();
       const docRef = await addDoc(collection(db, "potential customers"), {
@@ -45,6 +61,7 @@ const Login = () => {
       });
       console.log("Document written with ID: ", docRef.id);
       alert("Vaš mail je sačuvan!");
+
       setEmail("");
     } catch (error) {
       console.error("Error saving email to Firestore:", error);
