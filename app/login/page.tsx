@@ -11,6 +11,7 @@ import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import Image from "next/image";
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import Head from 'next/head';
 const Login = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ const Login = () => {
     try {
       const userCredential = await signInWithEmail(auth, email, password);
       // Redirect to home page or perform other actions upon successful login
-      router.push("/");
+     // router.push("/");
     } catch (error) {
       console.error("Error signing in with email and password:", error);
     }
@@ -28,7 +29,6 @@ const Login = () => {
   const handleSaveEmail = async () => {
     try {
       const auth = getAuth();
-      console.log(auth);
       const docRef = await addDoc(collection(db, "potential customers"), {
         email: email,
         timestamp: Date.now(),
