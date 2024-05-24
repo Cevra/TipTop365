@@ -45,6 +45,7 @@ const Login = () => {
       });
       console.log("Document written with ID: ", docRef.id);
       alert("Vaš mail je sačuvan!");
+      setEmail("");
     } catch (error) {
       console.error("Error saving email to Firestore:", error);
       alert("Failed to save email.");
@@ -106,6 +107,10 @@ const Login = () => {
               className="w-full px-4 py-3 sm:mt-10 mt-12 sm:px-4 text-black border-slate-100  border-collapse-0 bg-zinc-100 rounded-[62px] justify-start items-start inline-flex"
               placeholder="E-mail adresa"
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSaveEmail();
+                }}}
             />
           </div>
           <div className="w-10/12 sm:w-2/12 px-4 sm:px-4 py-3 sm:mt-10 mt-6 bg-cyan-950 rounded-[62px] justify-start items-start inline-flex">
