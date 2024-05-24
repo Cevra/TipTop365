@@ -26,7 +26,17 @@ const Login = () => {
       console.error("Error signing in with email and password:", error);
     }
   };
+  function isValidEmail(email: string): boolean {
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    return emailRegex.test(email);
+  }
+  
+  
   const handleSaveEmail = async () => {
+    if (!isValidEmail(email)) {
+      alert("Invalid email address. Please enter a valid email.");
+      return;
+    }
     try {
       const auth = getAuth();
       const docRef = await addDoc(collection(db, "potential customers"), {
