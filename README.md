@@ -1,3 +1,6 @@
+
+THIS IS OUR FIGMA DESIGN ---------->  https://www.figma.com/design/R40i0zCyGWzdj8m9BGoFt9/TipTop365?node-id=0%3A1&t=K3vQ86aWzMXPPvjt-1
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
