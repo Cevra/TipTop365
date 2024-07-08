@@ -19,11 +19,11 @@ export default function Home() {
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setLoading(false); // Set loading to false when auth state is determined
+      setLoading(false); // Set loading 
       if (user) {
         router.push('/');
       } else {
-        router.push('/login');
+        // router.push('/login');
       }
     });
 
@@ -47,65 +47,67 @@ export default function Home() {
   };
 
   return (
-//     <div className="min-h-screen bg-inherit flex flex-col">
-//   <div className="relative -z-0 h-[400px] md:h-[600px] ">
-//       <div className="absolute top-0 left-0 right-0 w-full z-10">
-//     <NavBar />
+    <div className="min-h-screen bg-inherit flex flex-col">
+  <div className="relative -z-0 h-[400px] md:h-[600px] ">
+      <div className="absolute top-0 left-0 right-0 w-full z-10">
+    <NavBar />
 
-//       </div>
-//       <div className="flex justify-start items-center h-full">
+      </div>
+      <div className="flex justify-start items-center h-full">
 
-//     <Image
-//       src="/Homepage1.jpg"
-//       layout="fill"
-//       objectFit="cover"
-//       alt="Large Image Description"
-//       />
-//     <div className="relative flex justify-start items-left ml-20  flex-col mt-50">
-//       <h2 className="text-6xl font-normal font-family: Roboto font-weight:700; text-white justify-start items-center flex-col mt-50">Top forma čistoće uz</h2>
-//       <h1 className="text-6xl font-normal font-weight:700; font-family: Roboto text-white">TipTop</h1>
+    <Image
+      src="/Homepage1.jpg"
+      layout="fill"
+      objectFit="cover"
+      alt="Large Image Description"
+      />
+    <div className="relative flex justify-start items-left ml-20  flex-col mt-50">
+      <h2 className="text-6xl font-normal font-family: Roboto font-weight:700; text-white justify-start items-center flex-col mt-50">Top forma čistoće uz</h2>
+      <h1 className="text-6xl font-normal font-weight:700; font-family: Roboto text-white">TipTop</h1>
 
-       
-//     </div>
-//       </div>
+     
+    </div>
+      </div>
 
-//   </div>
-//   <div className="flex-grow scrollbar-hide overflow-x-scroll p-4">
-//     {/* Recommended Posts Section with custom scrollbar and arrows */}
-//     <div className="scroll-container scrollbar-hide flex space-x-4 scrollbar-hide">
-//       {/* Simulated Posts */}
-//       {profiles.map((profile, index) => (
-//         <div key={index} className="bg-slate-100 p-4 rounded shadow-md fade">
-//           <h2 className="text-xl font-bold">{profile.name} {profile.surname}</h2>
-//           <h2 className="text-xl font-bold">{profile.description}</h2>
-//           <p>{profile.pricePerHour} per hour</p>
-//           <p>Available: {profile.availableHours} hours per day</p>
-//         </div>
-//       ))}
-//       <div className="scroll-arrow scroll-arrow-left"></div>
-//       <div className="scroll-arrow scroll-arrow-right"></div>
-//     </div>
-//   </div>
-//   <div className="flex-grow overflow-y-scroll p-4">
-//     {/* User Profiles Section */}
-//     <div className="space-y-4">
-//       {/* Render user profiles */}
-//       {profiles.map((profile, index) => (
-//         <div key={index} className="bg-slate-100 p-4 rounded shadow-md fade">
-//           <h2 className="text-xl font-bold">{profile.name} {profile.surname}</h2>
-//           <p>{profile.pricePerHour} per hour</p>
-//           <p>Available: {profile.availableHours} hours per day</p>
-//           <p>{profile.description.substring(0, 100)}...</p>
-//         </div>
-//       ))}
-//     </div>
-//   </div>
-//   <div className="p-4">
-//     <h1 className="text-2xl font-bold mb-4">Welcome to the Home Page</h1>
-//     <button onClick={goToProfile} className="bg-primary text-white py-2 px-4 rounded hover:bg-secondary">Profile</button>
-//   </div>
-//   <Footer/>
-// </div>
-<div className="w-full min-h-screen bg-gradient-to-r from-cyan-950 to-cyan-700 flex"></div>
+  </div>
+  <div className="flex-grow scrollbar-hide overflow-x-scroll p-4">
+    {/* Recommended Posts Section with custom scrollbar and arrows */}
+      <h2 className="text-4xl font-normal text-[#001A1E] font-weight:700; font-family: Roboto">Preporuceno za vas</h2>
+    <div className="scroll-container scrollbar-hide flex space-x-4 scrollbar-hide">
+      {/* Simulated Posts */}
+
+      {profiles.map((profile, index) => (
+        <div key={index} className="bg-slate-100 p-4 rounded shadow-md fade">
+          <h2 className="text-xl font-bold">{profile.name} {profile.surname}</h2>
+          <h2 className="text-xl font-bold">{profile.description}</h2>
+          <p>{profile.pricePerHour} per hour</p>
+          <p>Available: {profile.availableHours} hours per day</p>
+        </div>
+      ))}
+      <div className="scroll-arrow scroll-arrow-left"></div>
+      <div className="scroll-arrow scroll-arrow-right"></div>
+    </div>
+  </div>
+  <div className="flex-grow w-1/2 overflow-y-scroll p-4">
+    {/* User Profiles Section */}
+    <div className="space-y-4">
+      {/* Render user profiles */}
+      {profiles.map((profile, index) => (
+        <div key={index} className="bg-slate-100 p-4 rounded shadow-md fade">
+          <h2 className="text-xl font-bold">{profile.name} {profile.surname}</h2>
+          <p>{profile.pricePerHour} per hour</p>
+          <p>Available: {profile.availableHours} hours per day</p>
+          <p>{profile.description.substring(0, 100)}...</p>
+        </div>
+      ))}
+    </div>
+  </div>
+  <div className="p-4">
+    <h1 className="text-2xl font-bold mb-4">Welcome to the Home Page</h1>
+    <button onClick={goToProfile} className="bg-primary text-white py-2 px-4 rounded hover:bg-secondary">Profile</button>
+  </div>
+  <Footer/>
+</div>
+/* <div className="w-full min-h-screen bg-gradient-to-r from-cyan-950 to-cyan-700 flex"></div> */
   );
 }

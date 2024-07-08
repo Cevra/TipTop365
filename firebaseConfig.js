@@ -2,6 +2,7 @@
 import { initializeApp } from 'firebase/app';
 import {  getFirestore } from 'firebase/firestore';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
 
 
 // Your Firebase configuration
@@ -23,6 +24,9 @@ export const db = getFirestore(app);
 
 // Get Auth instance
 export const auth = getAuth(app);
-
+export const storage = getStorage(app); 
 // Optionally, connect to an emulator for testing
 // connectAuthEmulator(auth, 'http://localhost:9099');
+// const STORAGE_FOLDER_PATH = "gs://tiptop365-96eb5.appspot.com";
+// export const storage = getStorage(app, STORAGE_FOLDER_PATH);
+export default app;

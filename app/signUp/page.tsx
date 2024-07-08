@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation'; // Corrected from 'next/navigation'
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/firebaseConfig'; // Adjust the import path as necessary
-
+import '@/utils/hom'
 const SignUp = () => {
   const router = useRouter();
   const [email, setEmail] = useState<string>('');

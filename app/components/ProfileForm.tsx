@@ -1,5 +1,15 @@
 // components/ProfileForm.js
-import { useState } from "react";
+
+"use client";
+import React, { ChangeEvent, useState } from "react";
+import { storage } from "@/firebaseConfig";
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  UploadTaskSnapshot,
+} from "firebase/storage";
+
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig"; // Adjust the path based on your project structure
 import "./ProfileForm.css";
@@ -7,62 +17,109 @@ import { TimePicker } from 'react-time-picker';
 // import 'react-time-picker/dist/TimePicker.css';
 import { useRouter } from "next/navigation";
 import { getAuth } from "firebase/auth";
+import { FormData } from "../models/Profile";
+import ImageUpload from "../uplaodImage/page";
 
 const ProfileForm = () => {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    name: "",
-    surname: "",
-    phoneNumbers: "",
-    availableHours: "",
-    address: "",
-    pricePerHour: "",
-    gender: "",
-    description: "",
-    location: "", // Added location field
-    email: "", // Added email field
-    image: null,
-    jobTitle: "",
-  });
+ const [formData, setFormData] = useState<FormData>({
+  name: '',
+  surname: '',
+  phoneNumbers: '',
+  availableHours: '',
+  address: '',
+  pricePerHour: '',
+  gender: '',
+  description: '',
+  location: '',
+  email: '',
+  image: '',
+  jobTitle: '',
+  //services: [{ type: '', price: '' }], // Initialize with an empty service object
+});
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+  const handleMainFormDataChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     if (e.target instanceof HTMLInputElement) {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
+      setFormData({...formData, [e.target.name]: e.target.value });
     } else if (e.target instanceof HTMLTextAreaElement) {
-      setFormData({ ...formData, description: e.target.value });
-    } else if (e.target instanceof HTMLSelectElement) {
-      setFormData({ ...formData, gender: e.target.value });
+      setFormData({...formData, description: e.target.value });
+    } else if (e.target instanceof HTMLSelectElement && e.target.name === 'gender') {
+      setFormData({...formData, gender: e.target.value });
     }
   };
-  const handleTimeChange = (time:string|null) => {
-    if (time!== null) {
-    setFormData({...formData, availableHours: time});
+  
+  const [image, setImage] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [imageUrl, setImageUrl] = useState('');
+  
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImage(e.target.files[0]);
     }
   };
-
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser; // Get the current user
-      if (user) {
-        const uid = user.uid; // Get the user's UID
-        const docRef = await addDoc(collection(db, "profiles"), {
-          ...formData,
-          uid,
-        }); // Include the UID in the data
-        router.push("/Profile");
-      } else {
-        console.error("No user is signed in.");
+  
+    if (image) {
+      const storageRef = ref(storage, `images/${image.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, image);
+      uploadTask.on(
+        "state_changed",
+        (snapshot: UploadTaskSnapshot) => {
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          setUploadProgress(progress);
+        },
+        (error) => {
+          console.log(error.message);
+        },
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          setImageUrl(url);
+          // Update formData.image with the URL
+          setFormData({...formData, image: url });
+          // Proceed with form submission
+          try {
+            const auth = getAuth();
+            const user = auth.currentUser; // Get the current user
+            if (user) {
+              const uid = user.uid; // Get the user's UID
+              const docRef = await addDoc(collection(db, "profiles"), {
+               ...formData,
+                uid,
+              }); // Include the UID in the data
+              router.push(`/Profile/${docRef.id}`); // Navigate to the profile page
+            } else {
+              console.error("No user is signed in.");
+            }
+          } catch (e) {
+            console.error("Error adding document: ", e);
+          }
+        }
+      );
+    } else {
+      // If no image is selected, proceed with form submission without uploading an image
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser; // Get the current user
+        if (user) {
+          const uid = user.uid; // Get the user's UID
+          const docRef = await addDoc(collection(db, "profiles"), {
+           ...formData,
+            uid,
+          }); // Include the UID in the data
+          router.push(`/Profile/${docRef.id}`); // Navigate to the profile page
+        } else {
+          console.error("No user is signed in.");
+        }
+      } catch (e) {
+        console.error("Error adding document: ", e);
       }
-    } catch (e) {
-      console.error("Error adding document: ", e);
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="profile-form mx-auto max-w-md">
@@ -81,7 +138,7 @@ const ProfileForm = () => {
           id="name"
           name="name"
           placeholder="Name"
-          onChange={handleChange}
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
@@ -98,7 +155,7 @@ const ProfileForm = () => {
           id="surname"
           name="surname"
           placeholder="Surname"
-          onChange={handleChange}
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
@@ -108,30 +165,27 @@ const ProfileForm = () => {
           htmlFor="phoneNumbers"
           className="form-label block text-sm font-medium text-gray-700"
         >
-          Phone Numbers
+          Phone Number
         </label>
         <input
           type="tel"
           id="phoneNumbers"
           name="phoneNumbers"
-          placeholder="Phone Numbers"
-          onChange={handleChange}
+          placeholder="Phone Number"
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
+
       </div>
       <div className="form-group mb-4">
-        <label
-          htmlFor="availableHours"
-          className="form-label block text-sm font-medium text-gray-700"
-        >
-          Available Hours
+        <label htmlFor="image" className="form-label block text-sm font-medium text-gray-700">
+          Upload Image
         </label>
-        <TimePicker
-          //onChange={handleTimeChange}
-          value={formData.availableHours? new Date(formData.availableHours) : null}
-        />
+        <input type="file" id="image" onChange={handleChange} className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+        {uploadProgress > 0 && <p>{uploadProgress}% Uploaded</p>}
       </div>
+
       <div className="form-group mb-4">
         <label
           htmlFor="address"
@@ -144,12 +198,12 @@ const ProfileForm = () => {
           id="address"
           name="address"
           placeholder="Address"
-          onChange={handleChange}
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>
-      <div className="form-group mb-4">
+      {/* <div className="form-group mb-4">
         <label
           htmlFor="pricePerHour"
           className="form-label block text-sm font-medium text-gray-700"
@@ -161,11 +215,11 @@ const ProfileForm = () => {
           id="pricePerHour"
           name="pricePerHour"
           placeholder="Price Per Hour"
-          onChange={handleChange}
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-      </div>
+        /> 
+      </div>*/}
       <div className="form-group mb-4">
         <label
           htmlFor="gender"
@@ -176,17 +230,16 @@ const ProfileForm = () => {
         <select
           id="gender"
           name="gender"
-          onChange={handleChange}
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         >
           <option value="">Select Gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
-          <option value="other">Other</option>
         </select>
       </div>
-      <div className="form-group mb-4">
+      {/* <div className="form-group mb-4">
         <label
           htmlFor="jobTitle"
           className="form-label block text-sm font-medium text-gray-700"
@@ -198,11 +251,11 @@ const ProfileForm = () => {
           id="jobTitle"
           name="jobTitle"
           placeholder="Job Title"
-          onChange={handleChange}
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
-      </div>
+      </div> */}
       <div className="form-group mb-4">
         <label
           htmlFor="description"
@@ -214,7 +267,7 @@ const ProfileForm = () => {
           id="description"
           name="description"
           placeholder="Description for Profile"
-          onChange={handleChange}
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         ></textarea>
@@ -231,7 +284,7 @@ const ProfileForm = () => {
           id="location"
           name="location"
           placeholder="Location"
-          onChange={handleChange}
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
@@ -248,7 +301,7 @@ const ProfileForm = () => {
           id="email"
           name="email"
           placeholder="Email"
-          onChange={handleChange}
+          onChange={handleMainFormDataChange}
           required
           className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
