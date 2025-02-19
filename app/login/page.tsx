@@ -1,146 +1,96 @@
-// pages/login/index.js
 "use client";
 
-import { useRouter } from "next/navigation"; // Corrected from 'next/navigation'
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signInWithEmail } from "@/utils/auth";
-import { auth } from "@/firebaseConfig"; // Adjust the import path as necessary
-import Link from "next/link";
-import logoImage from "../../public/logolight.svg";
-import { collection, addDoc, getDocs } from "firebase/firestore";
-import { db } from "@/firebaseConfig";
+import { auth } from "@/firebaseConfig";
 import Image from "next/image";
+import logoImage from "../../public/logolight.svg";
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Head from 'next/head';
+
 const Login = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignInWithEmail = async () => {
     try {
       const userCredential = await signInWithEmail(auth, email, password);
-     // Redirect to home page or perform other actions upon successful login
-     router.push("/");
+      router.push("/Profile");
     } catch (error) {
       console.error("Error signing in with email and password:", error);
+      setError("SOMETHING IS WRONG");
     }
   };
-  function isValidEmail(email: string): boolean {
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    return emailRegex.test(email);
-  }
-  
-  
-  const handleSaveEmail = async () => {
-    if (!isValidEmail(email)) {
-      alert("Neispravan email, molimo vas unesite pravilan email.");
-      return;
-    }
-
-    const potentialCustomersCollection = collection(db, "potential customers");
-    const querySnapshot = await getDocs(potentialCustomersCollection);
-  
-    let emailExists = false;
-    querySnapshot.forEach((doc) => {
-      if (doc.data().email === email) {
-        emailExists = true;
-      }
-    });
-  
-    if (emailExists) {
-      alert("Ovaj mail vec postoji u nasoj bazi.");
-      return;
-    }
-
-    try {
-      const auth = getAuth();
-      const docRef = await addDoc(collection(db, "potential customers"), {
-        email: email,
-        timestamp: Date.now(),
-      });
-      console.log("Document written with ID: ", docRef.id);
-      alert("Vaš mail je sačuvan!");
-
-      setEmail("");
-    } catch (error) {
-      console.error("Error saving email to Firestore:", error);
-      alert("Email nije sacuvan.");
-    }
-  };
-  
 
   return (
-    <div className="min-h-screen bg-primary  flex items-center justify-center">
-      <div className="bg-white  sm:bg-primary p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl text-white font-bold mb-4">Login</h2>
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder="Email" />
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mt-4">Password</label>
-          <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder="Password" />
-          <button onClick={handleSignInWithEmail} className="mt-4 w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Sign In</button>
+    <section className="bg-gradient-to-r from-[#02404B] to-[#238B9E] dark:bg-gray-900">
+      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+        <a href="#" className="flex items-center mb-2 text-2xl font-semibold text-gray-900 dark:text-white">
+          {/* Logo container */}
+          <div className="w-auto mx-auto flex items-center">
+            <Image
+              src={logoImage.src}
+              alt="Company Logo"
+              layout="fixed"
+              width={144}
+              height={64}
+            />
+          </div>
+        </a>
+        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
+            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+              Sign In
+            </h1>
+            <form onSubmit={handleSignInWithEmail} className="space-y-4 md:space-y-6">
+              <div>
+                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="name@company.com"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              {error && <p className="text-red-500 mt-2">{error}</p>}
+              <button
+                type="submit"
+                onClick={handleSignInWithEmail}
+                className="w-full text-white bg-gradient-to-r from-[#02404B] to-[#238B9E] hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              >
+                Sign In
+              </button>
+              <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+                Don't have an account?{" "}
+                <a href="/signUp" className="font-medium text-primary-600 hover:underline dark:text-primary-500">
+                  Sign Up here
+                </a>
+              </p>
+            </form>
+          </div>
         </div>
-        <Link href="/signUp" className="mt-4 block text-center text-sm text-blue-600 hover:text-blue-800">Don't have an account? Sign Up</Link>
       </div>
-    </div>
-    // <div className="min-h-screen bg-gradient-to-r from-green-800 via-purple-800 to-blue-700 flex items-center justify-center">
-    //   <div className="bg-white p-8 rounded shadow-md w-full max-w-md text-center">
-    //     <h1 className="text-6xl font-bold mb-4">COMING SOON</h1>
-    //     <p className="text-xl font-semibold mb-8">Our website is currently under construction. Please check back later!</p>
-
-    //   </div>
-    // </div>
-    // <div className="w-full min-h-screen bg-gradient-to-r from-cyan-950 to-cyan-700 flex flex-col items-center justify-center">
-    //   {/* Logo */}
-    //   <div className="flex justify-center items-center mb-8 mt-12">
-    //     <Image
-    //       src={logoImage.src} // Ensure this path is correct
-    //       alt="Company Logo"
-    //       layout="intrinsic"
-    //       width={240}
-    //       height={120}
-    //       className="sm:w-80 sm:h-52"
-    //     />
-    //   </div>
-
-    //   {/* Other content */}
-    //   <div className="text-center">
-    //     <div className="text-gray-100 text-6xl sm:text-8xl  mt-12  font-bold font-Roboto">
-    //       Uskoro stiže
-    //     </div>
-
-    //     <div className="text-white mt-12 text-2xl sm:text-4xl font-normal font-Roboto">
-    //       Budite prvi koji će saznati kada stranica bude aktivna.
-    //     </div>
-    //     <div className="flex mx-4 items-center flex-col sm:flex-row sm:items-center sm:justify-center justify-center sm:space-x-12">
-    //       <div className="w-10/12   justify-start items-start inline-flex">
-    //         <input
-            
-    //           type="email"
-    //           name="email"
-    //           autoComplete="email"
-    //           required
-    //           className="w-full px-4 py-3 sm:mt-10 mt-12 sm:px-4 text-black border-slate-100  border-collapse-0 bg-zinc-100 rounded-[62px] justify-start items-start inline-flex"
-    //           placeholder="E-mail adresa"
-    //           onChange={(e) => setEmail(e.target.value)}
-    //           onKeyDown={(e) => {
-    //             if (e.key === 'Enter') {
-    //               handleSaveEmail();
-    //             }}}
-    //         />
-    //       </div>
-    //       <div className="w-10/12 sm:w-2/12 px-4 sm:px-4 py-3 sm:mt-10 mt-6 bg-cyan-950 rounded-[62px] justify-start items-start inline-flex">
-    //         <button
-    //           onClick={handleSaveEmail}
-    //           className="w-full text-center text-gray-100 text-base font-normal font-Roboto"
-    //         >
-    //           Pošalji
-    //         </button>
-    //       </div>
-    //     </div>
-    //   </div>
-    // </div>
+    </section>
   );
 };
 

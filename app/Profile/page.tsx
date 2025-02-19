@@ -21,39 +21,47 @@ const UserProfile = () => {
   const [imageUrl, setImageUrl] = useState<string>(''); // State to hold the image URL
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const auth = getAuth();
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          const uid = user.uid;
-          const q = query(collection(db, "profiles"), where("uid", "==", uid));
-          const querySnapshot = await getDocs(q);
+    let unsubscribe;
+
+    const checkAuthState = () => {
+      const user = auth.currentUser;
+      if (user) {
+        const uid = user.uid;
+        const q = query(collection(db, "profiles"), where("uid", "==", uid));
+        getDocs(q).then(querySnapshot => {
           if (!querySnapshot.empty) {
             const profileData = querySnapshot.docs[0].data() as Profile;
             setProfile(profileData);
 
-            // Fetch the image URL from Firebase Storage
-            const imagePath = profileData.image; // Assuming 'image' is the field storing the image path
+            const imagePath = profileData.image;
             if (imagePath) {
               const imageRef = ref(storage, imagePath);
               getDownloadURL(imageRef).then((url) => {
-                setImageUrl(url); // Update the image URL state
+                setImageUrl(url);
               }).catch((error) => {
                 console.error('Failed to fetch image URL:', error);
               });
             }
           } else {
-           // router.push('/ProfileDetails');
             console.log("No such document!");
           }
-        } else {
-          console.log("User is signed out!");
-        }
-      });
+        }).catch(error => {
+          console.error("Error fetching profile:", error);
+        });
+      } else {
+        console.log("User is signed out!");
+        router.push('/login');
+      }
     };
-    fetchProfile();
+
+    unsubscribe = onAuthStateChanged(auth, checkAuthState);
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
   if (!profile) {
+    //router.push(`login`)
     return <div>Loading...</div>;
   }
   const addService = () => {

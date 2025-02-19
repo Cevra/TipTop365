@@ -89,8 +89,11 @@ const ProfileForm = () => {
               const docRef = await addDoc(collection(db, "profiles"), {
                ...formData,
                 uid,
+                image: imageUrl
               }); // Include the UID in the data
-              router.push(`/Profile/${docRef.id}`); // Navigate to the profile page
+              // router.push(`/Profile/${docRef.id}`); // Navigate to the profile page
+              router.push(`/Profile`); // Navigate to the profile page
+
             } else {
               console.error("No user is signed in.");
             }
@@ -110,7 +113,9 @@ const ProfileForm = () => {
            ...formData,
             uid,
           }); // Include the UID in the data
-          router.push(`/Profile/${docRef.id}`); // Navigate to the profile page
+          // router.push(`/Profile/${docRef.id}`); // Navigate to the profile page
+          router.push(`/Profile`); // Navigate to the profile page
+
         } else {
           console.error("No user is signed in.");
         }
@@ -309,6 +314,7 @@ const ProfileForm = () => {
       <button
         type="submit"
         className="submit-button bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded-full"
+        
       >
         Submit
       </button>

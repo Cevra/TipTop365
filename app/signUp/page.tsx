@@ -1,56 +1,118 @@
-// pages/signup/index.js
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Corrected from 'next/navigation'
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/firebaseConfig'; // Adjust the import path as necessary
-import '@/utils/hom'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/firebaseConfig";
+import Image from "next/image";
+import logoImage from '../../public/logo.svg'; // Adjust the path according to your project structure
+
+
 const SignUp = () => {
   const router = useRouter();
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState<string>('');
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (password!== passwordConfirmation) {
-      setError('Passwords do not match');
+    if (password !== passwordConfirmation) {
+      setError("Passwords do not match");
       return;
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      router.push('/');
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      router.push("/ProfileDetails");
     } catch (error) {
-      console.error('Error creating user:', error);
-      setError('SOMETHING IS WRONG');
+      console.error("Error creating user:", error);
+      setError("SOMETHING IS WRONG");
     }
   };
 
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Sign Up</h2>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-            <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder="Email" required />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mt-4">Password</label>
-            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder="Password" required />
-          </div>
-          <div>
-            <label htmlFor="passwordConfirmation" className="block text-sm font-medium text-gray-700 mt-4">Confirm Password</label>
-            <input type="password" id="passwordConfirmation" value={passwordConfirmation} onChange={(e) => setPasswordConfirmation(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder="Confirm Password" required />
-          </div>
-          {error && <p className="text-red-500 mt-2">{error}</p>}
-          <button type="submit" className="mt-4 w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Sign Up</button>
-        </form>
+    <section className="bg-gradient-to-r from-[#02404B] to-[#238B9E] dark:bg-gray-900">
+      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+        <a href="#" className="flex items-center mb-2 text-2xl font-semibold text-gray-900 dark:text-white">
+          
+        <div  className=" w-auto mx-auto  flex items-center">
+        <Image
+          src={logoImage.src} // Use the imported logoImage object
+          alt="Company Logo"
+          layout="fixed" // Changed to fixed to prevent scaling
+          width={144} // Adjusted width to fit the navbar
+          height={64} // Adjusted height to fit the navbar
+          />
       </div>
-    </div>
+          </a>
+        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
+            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+              Create an account
+            </h1>
+            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+              <div>
+                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="name@company.com"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
+                <input
+                  type="password"
+                  name="confirm-password"
+                  id="confirm-password"
+                  value={passwordConfirmation}
+                  onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              {error && <p className="text-red-500 mt-2">{error}</p>}
+              <button
+                type="submit"
+                className="w-full text-white bg-gradient-to-r from-[#02404B] to-[#238B9E] hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              >
+                Sign Up
+              </button>
+              <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+                Already have an account?{" "}
+                <a href="/login" className="font-medium text-primary-600 hover:underline dark:text-primary-500">
+                  Login here
+                </a>
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 

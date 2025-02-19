@@ -1,0 +1,128 @@
+/* styles.css */
+
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #F5F5F9;
+    text-align: center;
+
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  /* About Us Page Styles */
+  h1 {
+    text-align: center;
+    color: #02404B;
+    font-size: 2.5em;
+    margin-bottom: 40px;
+  }
+  
+  h2 {
+    color: #02404B;
+    font-size: 1.8em;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  
+  p {
+    margin-bottom: 25px;
+    line-height: 1.8;
+    text-align: center;
+    padding: 20 20px;
+  }
+  
+  ul {
+    padding-left: 40px;
+  }
+  
+  li {
+    margin-bottom: 15px;
+  }
+  
+  /* Horizontal Lines */
+  hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 30px 0;
+    opacity: 0.7;
+  }
+  h1 {
+    text-align: center;
+    color: #02404B;
+    font-size: 2.5em;
+    margin-bottom: 40px;
+  }
+  
+  h2 {
+    color: #02404B;
+    font-size: 1.8em;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  
+  p {
+    margin-bottom: 25px;
+    line-height: 1.8;
+    text-align: center;
+  }
+  
+  ul {
+    padding-left: 40px;
+  }
+  
+  li {
+    margin-bottom: 15px;
+  }
+  
+  /* Horizontal Lines */
+  hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 30px 0;
+    opacity: 0.7;
+  }
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .container {
+      max-width: 90%;
+    }
+  
+    h1 {
+      font-size: 2em;
+    }
+  
+    h2 {
+      font-size: 1.5em;
+    }
+  }
+  
+  /* Custom Styles for Specific Sections */
+  .mission-section {
+    margin-bottom: 50px;
+  }
+  
+  .function-section {
+    margin-bottom: 50px;
+  }
+  
+  .values-section {
+    margin-bottom: 50px;
+  }
+  
+  .why-choose-us {
+    margin-bottom: 50px;
+  }
+  

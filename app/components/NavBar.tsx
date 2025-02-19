@@ -33,8 +33,8 @@ const NavBar = () => {
     setIsOpen(!isOpen);
   };
   return (
-    <nav className="navbar z-40 bg-[#02404B] w-full h-[var(--navbar-height)] z-50 flex items-center justify-between">
-      <div onClick={handleClickLogo} className="w-[var(--navbar-width)] mx-auto ml-10 flex items-center">
+<nav className="navbar z-40 bg-white w-full  flex items-center justify-between bg-[#FFFFFF]">
+<div onClick={handleClickLogo} className="w-[var(--navbar-width)] mx-auto ml-10 flex items-center">
         <Image
           src={logoImage.src} // Use the imported logoImage object
           alt="Company Logo"
@@ -58,17 +58,17 @@ const NavBar = () => {
             </svg>
           </button>
           {/* Dropdown Menu */}
-          <div className={`absolute top-full left--12 right-0 mt-2 w-32  bg-[#ffff] rounded-md justify-center shadow-lg transform overflow-auto translate-x-1/10 ${isOpen? 'block' : 'hidden'}`}>
+          <div className={`absolute top-full left--12 right-0 mt-2 w-32  bg-[#fff] rounded-md justify-center shadow-lg transform overflow-auto translate-x-1/10 ${isOpen? 'block' : 'hidden'}`}>
             <div className="space-y-12">
-            <Link href={isAuthenticated ? "/ProfileDetails" : "/login"} passHref>
-          <button className="bg-[#02404B] text-white py-1 w-32 px-4 rounded hover:bg-secondary">Postani dio ekipe</button>
+            <Link href={isAuthenticated ? "/Profile" : "/Profile"} passHref>
+          <button className="bg-[#02404B] text-white py-1 w-full px-4 rounded hover:bg-secondary">Postani dio ekipe</button>
           </Link>
           <Link href="/page2" passHref>
             <button className=" bg-white font-bold text-[#02404B]  w-32 py-2 h-12 px-4  hover:bg-secondary">Usluge</button>
           </Link>
-          <Link href="/page2" passHref>
+          <Link href="/aboutUs" passHref>
             <button className="bg-white  font-bold text-[#02404B] py-2 w-32 px-4 h-12 hover:bg-secondary">O nama</button>
-          </Link> <Link href="/page2" passHref>
+          </Link> <Link href="/aboutUs" passHref>
             <button className="bg-white font-bold text-[#02404B] py-2 w-32 px-4  hover:bg-secondary">Pomoć</button>
           </Link> <Link href={isAuthenticated ? "/ProfileDetails" : "/login"} passHref>
             <button className="bg-white font-bold text-[#02404B]  w-32 py-2 h-12 px-4  hover:bg-secondary">Login</button>
@@ -80,15 +80,15 @@ const NavBar = () => {
   
         {/* Desktop Menu */}
         <div className="hidden lg:flex space-x-16 mr-11 items-center font-bold">
-          <Link href={isAuthenticated ? "/ProfileDetails" : "/login"} passHref>
-          <button className="bg-[#02404B] text-white py-2 px-4 rounded hover:bg-secondary">Postani dio ekipe</button>
+          <Link href={isAuthenticated ? "/Profile" : "/login"} passHref>
+          <button className="bg-[#02404B] text-white w-40  py-2 px-2 rounded hover:bg-secondary">Postani dio ekipe</button>
           </Link>
           <Link href="/page2" passHref>
             <span className="text-emerald-950 hover:text-gray-300">Usluge</span>
           </Link>
-          <Link href="/page2" passHref>
+          <Link href="/aboutUs" passHref>
             <span className="text-emerald-950 hover:text-gray-300">O nama</span>
-          </Link> <Link href="/page2" passHref>
+          </Link> <Link href="/aboutUs" passHref>
             <span className="text-emerald-950 hover:text-gray-300">Pomoć</span>
           </Link> <Link href={isAuthenticated ? "/ProfileDetails" : "/login"} passHref>
             <span className="text-emerald-950 hover:text-gray-300">Login</span>

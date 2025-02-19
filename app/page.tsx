@@ -41,35 +41,38 @@ export default function Home() {
 
     fetchProfiles(); // Call fetchProfiles directly
   }, [router]); // Ensure this effect runs only when router changes
-
   const goToProfile = () => {
     router.push('/Profile');
   };
 
   return (
     <div className="min-h-screen bg-inherit flex flex-col">
-  <div className="relative -z-0 h-[400px] md:h-[600px] ">
+    <div className="relative -z-0 h-[400px] md:h-[600px]">
       <div className="absolute top-0 left-0 right-0 w-full z-10">
-    <NavBar />
-
+        <NavBar />
       </div>
-      <div className="flex justify-start items-center h-full">
-
-    <Image
-      src="/Homepage1.jpg"
-      layout="fill"
-      objectFit="cover"
-      alt="Large Image Description"
-      />
-    <div className="relative flex justify-start items-left ml-20  flex-col mt-50">
-      <h2 className="text-6xl font-normal font-family: Roboto font-weight:700; text-white justify-start items-center flex-col mt-50">Top forma čistoće uz</h2>
-      <h1 className="text-6xl font-normal font-weight:700; font-family: Roboto text-white">TipTop</h1>
-
-     
+      <div className="flex justify-between items-center h-full">
+        <div className="container mx-auto px-4 py-16 text-left relative z-10 lg:w-1/2">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-8">Payments tool for software companies</h1>
+          <p className="text-xl md:text-2xl font-medium text-gray-200 mb-8">From checkout to global sales tax compliance, companies around the world use Flowbite to simplify their payment stack.</p>
+          <a href="#" className="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900 rounded-lg shadow-md transition duration-300">
+            Get started
+            <svg className="w-5 h-5 ml-2 -mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+          </a>
+          
+        </div>
+        <div className="hidden lg:block lg:w-1/2">
+          <Image
+            src="/Homepage1.jpg"
+            layout="fill"
+            objectFit="cover"
+            alt="Large Image Description"
+          />
+        </div>
+      </div>
     </div>
-      </div>
 
-  </div>
+
   <div className="flex-grow scrollbar-hide overflow-x-scroll p-4">
     {/* Recommended Posts Section with custom scrollbar and arrows */}
       <h2 className="text-4xl font-normal text-[#001A1E] font-weight:700; font-family: Roboto">Preporuceno za vas</h2>
