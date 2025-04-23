@@ -4,9 +4,9 @@ import Image from 'next/image';
 
 const HeroSection = () => {
   return (
-    <div className="relative -z-0 h-[400px] md:h-[600px]">
+    <div className="relative h-[400px] md:h-[600px]">
       <div className="flex justify-between items-center h-full">
-        <div className="container mx-auto px-4 py-16 text-left relative z-10 lg:w-1/2">
+        <div className="font-sans container mx-auto px-4 py-16 text-left relative z-10 lg:w-1/2">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-8">
             Payments tool for software companies
           </h1>
