@@ -4,7 +4,11 @@ import "./globals.css";
 import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   icons: {
@@ -22,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable}`}>
       <body className={`${inter.className} bg-white dark:bg-gray-900`}>
         <div className="min-h-screen flex flex-col">
           <NavBar />

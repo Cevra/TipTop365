@@ -1,104 +1,297 @@
-'use client'
+import { Disclosure, Menu, Transition } from '@headlessui/react'
+import { Bars3Icon, XMarkIcon, UserCircleIcon, BellIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; // Corrected import for Next.js
-import Link from 'next/link';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/firebaseConfig'; 
-import logoImage from '../../public/logo.svg'; // Adjust the path according to your project structure
-import Image from 'next/image';
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { auth } from '@/firebaseConfig'
+import { onAuthStateChanged } from 'firebase/auth'
+import Image from 'next/image'
+import logoImage from '../../public/logo.svg'
+import { tree } from 'next/dist/build/templates/app-page'
 
 const NavBar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // State to track authentication status
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   
+  const router = useRouter()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    console.log(isMenuOpen)
+  }, [isMenuOpen])
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-    });
+      setIsAuthenticated(!!user)
+    })
+    return () => unsubscribe()
+  }, [])
 
-    // Cleanup subscription on component unmount
-    return () => unsubscribe();
-  }, []);
-  const router = useRouter();
   const handleClickLogo = () => {
-    // Programmatically navigate to the homepage
-    router.push('/');
-  };
+    router.push('/')
+  }
 
-  const handleClick = () => {
-    setIsOpen(!isOpen);
-  };
   return (
-<nav className="navbar z-40 bg-white w-full  flex items-center justify-between bg-[#FFFFFF]">
-<div onClick={handleClickLogo} className="w-[var(--navbar-width)] mx-auto ml-10 flex items-center">
-        <Image
-          src={logoImage.src} // Use the imported logoImage object
-          alt="Company Logo"
-          layout="fixed" // Changed to fixed to prevent scaling
-          width={144} // Adjusted width to fit the navbar
-          height={64} // Adjusted height to fit the navbar
-        />
-      </div>
-      <div className="container mx-auto mr-1 px-10 flex justify-end items-center">
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden relative justify-end">
-          <button onClick={handleClick} className="focus:outline-none">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6 text-black"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          {/* Dropdown Menu */}
-          <div className={`absolute top-full left--12 right-0 mt-2 w-32  bg-[#fff] rounded-md justify-center shadow-lg transform overflow-auto translate-x-1/10 ${isOpen? 'block' : 'hidden'}`}>
-            <div className="space-y-12">
-            <Link href={isAuthenticated ? "/Profile" : "/Profile"} passHref>
-          <button className="bg-[#02404B] text-white py-1 w-full px-4 rounded hover:bg-secondary">Postani dio ekipe</button>
-          </Link>
-          <Link href="/page2" passHref>
-            <button className=" bg-white font-bold text-[#02404B]  w-32 py-2 h-12 px-4  hover:bg-secondary">Usluge</button>
-          </Link>
-          <Link href="/aboutUs" passHref>
-            <button className="bg-white  font-bold text-[#02404B] py-2 w-32 px-4 h-12 hover:bg-secondary">O nama</button>
-          </Link> <Link href="/aboutUs" passHref>
-            <button className="bg-white font-bold text-[#02404B] py-2 w-32 px-4  hover:bg-secondary">Pomoć</button>
-          </Link> <Link href={isAuthenticated ? "/ProfileDetails" : "/login"} passHref>
-            <button className="bg-white font-bold text-[#02404B]  w-32 py-2 h-12 px-4  hover:bg-secondary">Login</button>
-          </Link>
-              {/* Add more links as needed */}
+    <nav className="bg-white shadow-sm relative z-50">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 justify-between items-center">
+          <div className="flex items-center justify-between w-full">
+            {/* Logo - centered on mobile */}
+            <div className="flex shrink-0 items-center md:ml-0 absolute left-1/2 transform -translate-x-1/2 md:relative md:left-0 md:transform-none" onClick={handleClickLogo}>
+              <Image
+                src={logoImage.src}
+                alt="Company Logo"
+                width={144}
+                height={64}
+              />
+            </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:ml-12 md:flex md:space-x-8">
+              <Link
+                href="/"
+                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                  pathname === '/' 
+                    ? 'border-[#00A6FB] text-gray-900' 
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                Home
+              </Link>
+              <Link
+                href="/page2"
+                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                  pathname === '/page2' 
+                    ? 'border-[#00A6FB] text-gray-900' 
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                Usluge
+              </Link>
+              <Link
+                href="/aboutUs"
+                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                  pathname === '/aboutUs' 
+                    ? 'border-[#00A6FB] text-gray-900' 
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                O nama
+              </Link>
+              <Link
+                href="/help"
+                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                  pathname === '/help' 
+                    ? 'border-[#02404B] text-gray-900' 
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                Pomoć
+              </Link>
+            </div>
+
+            {/* Mobile menu button - moved to right */}
+            <div className="flex md:hidden ml-auto">
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#00A6FB]"
+              >
+                <span className="sr-only">Open main menu</span>
+                {isMenuOpen ? (
+                  <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+                ) : (
+                  <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+                )}
+              </button>
+            </div>
+
+            {/* Desktop Auth Buttons */}
+            <div className="hidden md:flex items-center gap-x-4">
+              {!isAuthenticated ? (
+                <>
+                  <Link href="/login" className="relative inline-flex items-center gap-x-2 rounded-md bg-[#02404B] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90">
+                    Postani dio ekipe
+                    <span className="text-lg">+</span>
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="relative inline-flex items-center justify-center rounded-full bg-gray-100 p-2 text-gray-400 hover:bg-gray-200"
+                  >
+                    <UserCircleIcon className="h-10 w-10" aria-hidden="true" />
+                  </Link>
+                </>
+              ) : (
+                <div className="flex items-center gap-x-4">
+                  <button className="relative inline-flex items-center justify-center rounded-full bg-gray-100 p-2 text-gray-400 hover:bg-gray-200">
+                    <BellIcon className="h-6 w-6" aria-hidden="true" />
+                  </button>
+                  <Menu as="div" className="relative">
+                    <Menu.Button className="relative flex rounded-full bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
+                      <img
+                        src="/default-avatar.jpg"
+                        alt="user photo"
+                        className="h-10 w-10 rounded-full"
+                      />
+                    </Menu.Button>
+                    <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
+                      <Menu.Item>
+                        {({ active }) => (
+                          <Link href="/ProfileDetails" className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}>
+                            Profil
+                          </Link>
+                        )}
+                      </Menu.Item>
+                      <Menu.Item>
+                        {({ active }) => (
+                          <Link href="/settings" className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}>
+                            Postavke
+                          </Link>
+                        )}
+                      </Menu.Item>
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+               //                 onClick={handleSignOut}
+                            className={`block w-full text-left px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
+                          >
+                            Odjava
+                          </button>
+                        )}
+                      </Menu.Item>
+                    </Menu.Items>
+                  </Menu>
+                </div>
+              )}
             </div>
           </div>
         </div>
-  
-        {/* Desktop Menu */}
-        <div className="hidden lg:flex space-x-16 mr-11 items-center font-bold">
-          <Link href={isAuthenticated ? "/Profile" : "/login"} passHref>
-          <button className="bg-[#02404B] text-white w-40  py-2 px-2 rounded hover:bg-secondary">Postani dio ekipe</button>
-          </Link>
-          <Link href="/page2" passHref>
-            <span className="text-emerald-950 hover:text-gray-300">Usluge</span>
-          </Link>
-          <Link href="/aboutUs" passHref>
-            <span className="text-emerald-950 hover:text-gray-300">O nama</span>
-          </Link> <Link href="/aboutUs" passHref>
-            <span className="text-emerald-950 hover:text-gray-300">Pomoć</span>
-          </Link> <Link href={isAuthenticated ? "/ProfileDetails" : "/login"} passHref>
-            <span className="text-emerald-950 hover:text-gray-300">Login</span>
-          </Link>
-          {/* Add more links as needed */}
-        </div>
       </div>
+
+      {/* Mobile menu panel - updated to dropdown */}
+      <Transition
+        show={isMenuOpen}
+        enter="transition duration-200 ease-out"
+        enterFrom="transform scale-95 opacity-0"
+        enterTo="transform scale-100 opacity-100"
+        leave="transition duration-100 ease-in"
+        leaveFrom="transform scale-100 opacity-100"
+        leaveTo="transform scale-95 opacity-0"
+        className="absolute top-full inset-x-0 md:hidden"
+      >
+        <div className="bg-white shadow-lg">
+          <div className="space-y-1 px-2 pt-2 pb-3">
+            {/* Navigation Links */}
+            <Link
+              href="/"
+              className={`block rounded-md px-3 py-2 text-base font-medium ${
+                pathname === '/'
+                  ? 'bg-blue-50 text-[#00A6FB]'
+                  : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
+              href="/page2"
+              className={`block rounded-md px-3 py-2 text-base font-medium ${
+                pathname === '/page2'
+                  ? 'bg-blue-50 text-[#00A6FB]'
+                  : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Usluge
+            </Link>
+            <Link
+              href="/aboutUs"
+              className={`block rounded-md px-3 py-2 text-base font-medium ${
+                pathname === '/aboutUs'
+                  ? 'bg-blue-50 text-[#00A6FB]'
+                  : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              O nama
+            </Link>
+            <Link
+              href="/help"
+              className={`block rounded-md px-3 py-2 text-base font-medium ${
+                pathname === '/help'
+                  ? 'bg-blue-50 text-[#00A6FB]'
+                  : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Pomoć
+            </Link>
+          </div>
+
+          {/* User Section */}
+          <div className="border-t border-gray-200 pt-4 pb-3">
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center px-4">
+                  <div className="shrink-0">
+                    <img
+                      src="/default-avatar.jpg"
+                      alt="user photo"
+                      className="h-10 w-10 rounded-full"
+                    />
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-base font-medium text-gray-800">Korisnički profil</div>
+                    <div className="text-sm font-medium text-gray-500">name@example.com</div>
+                  </div>
+                  <button className="ml-auto relative shrink-0 rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-[#00A6FB] focus:ring-offset-2">
+                    <span className="absolute -inset-1.5" />
+                    <span className="sr-only">View notifications</span>
+                    <BellIcon className="h-6 w-6" aria-hidden="true" />
+                  </button>
+                </div>
+                <div className="mt-3 space-y-1 px-2">
+                  <Link
+                    href="/ProfileDetails"
+                    className="block rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Profil
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="block rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Postavke
+                  </Link>
+                  <button
+                    // onClick={handleSignOut}
+                    className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Odjava
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="px-4">
+                <Link
+                  href="/login"
+                  className="block w-full text-center rounded-md bg-[#02404B] px-3 py-2 text-base font-medium text-white hover:bg-opacity-90"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Postani dio ekipe
+                  <span className="ml-1">+</span>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </Transition>
     </nav>
-  );
+  )
 }
-export default NavBar;
+
+export default NavBar

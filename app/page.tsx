@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react'; // Import useState
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/firebaseConfig'; 
+import { auth } from '@/firebaseConfig';
 import { collection, getDocs, query, DocumentData } from "firebase/firestore"; // Import Firestore functions
 import { db } from '@/firebaseConfig'; // Adjust the path based on your project structure
 import { ProfileData } from './models/Profile';
