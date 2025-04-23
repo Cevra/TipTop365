@@ -1,3 +1,5 @@
+'use client';
+
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon, UserCircleIcon, BellIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
