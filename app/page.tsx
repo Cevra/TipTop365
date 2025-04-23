@@ -47,13 +47,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-inherit flex flex-col">
-    <div className="relative -z-0 h-[400px] md:h-[600px]">
-      <div className="absolute top-0 left-0 right-0 w-full z-10">
+    <div className="relative h-[400px] md:h-[600px]">
+      <div className="absolute top-0 left-0 right-0 w-full">
         <NavBar />
       </div>
       <div className="flex justify-between items-center h-full">
         <div className="container mx-auto px-4 py-16 text-left relative z-10 lg:w-1/2">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-8">Payments tool for software companies</h1>
+          <h1 className="font-sans text-4xl md:text-6xl font-bold text-white mb-8">Payments tool for software companies</h1>
           <p className="text-xl md:text-2xl font-medium text-gray-200 mb-8">From checkout to global sales tax compliance, companies around the world use Flowbite to simplify their payment stack.</p>
           <a href="#" className="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900 rounded-lg shadow-md transition duration-300">
             Get started
