@@ -92,7 +92,7 @@ const ProfileForm = () => {
                 image: imageUrl
               }); // Include the UID in the data
               // router.push(`/Profile/${docRef.id}`); // Navigate to the profile page
-              router.push(`/Profile`); // Navigate to the profile page
+              router.push(`/profile`); // Navigate to the profile page
 
             } else {
               console.error("No user is signed in.");
@@ -114,7 +114,7 @@ const ProfileForm = () => {
             uid,
           }); // Include the UID in the data
           // router.push(`/Profile/${docRef.id}`); // Navigate to the profile page
-          router.push(`/Profile`); // Navigate to the profile page
+          router.push(`/profile`); // Navigate to the profile page
 
         } else {
           console.error("No user is signed in.");

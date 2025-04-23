@@ -34,11 +34,13 @@ export interface FormData {
  // services: Service[]; // Array of services
 }
 export interface FileChangeEvent extends React.ChangeEvent<HTMLInputElement> {}
+
 export interface ProfileData {
   name: string;
   surname: string;
   pricePerHour: number;
   availableHours: string;
   description: string;
+  uid: string;
   // Add other fields as necessary
 }
