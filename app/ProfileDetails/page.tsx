@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useState, useEffect } from "react";
 import { storage } from "@/firebaseConfig";
 import {
   ref,
@@ -16,6 +16,12 @@ import { ServiceProvider } from "../models/User";
 import { useAuth } from "@/contexts/AuthContext";
 import "./styles.css"; // Import the new styles
 
+interface SnackbarState {
+  open: boolean;
+  message: string;
+  type: 'success' | 'error';
+}
+
 const ProfileDetails = () => {
   const router = useRouter();
   const { user } = useAuth();
@@ -23,21 +29,42 @@ const ProfileDetails = () => {
   const [formData, setFormData] = useState<Partial<ServiceProvider>>({
     name: '',
     surname: '',
-    phoneNumbers: '',
-    availableHours: '',
-    address: '',
-    pricePerHour: '',
-    gender: '',
+    phoneNumbers: [], 
+    availability: {
+      monday: [],
+      tuesday: [],
+      wednesday: [],
+      thursday: [],
+      friday: [], 
+      saturday: [],
+      sunday: []
+    },
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: ''
+    },
+    pricePerHour: 0,
+    gender: 'other',
     description: '',
-    location: '',
+    location: {
+      latitude: 0,
+      longitude: 0
+    },
     email: user?.email || '',
-    image: '',
     services: [],
   });
 
   const [image, setImage] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [imageUrl, setImageUrl] = useState('');
+
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
+    open: false,
+    message: '',
+    type: 'success'
+  });
 
   const handleMainFormDataChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -47,7 +74,7 @@ const ProfileDetails = () => {
     } else if (e.target instanceof HTMLTextAreaElement) {
       setFormData({...formData, description: e.target.value });
     } else if (e.target instanceof HTMLSelectElement && e.target.name === 'gender') {
-      setFormData({...formData, gender: e.target.value });
+      setFormData({...formData, gender: e.target.value as 'male' | 'female' | 'other' });
     }
   };
 
@@ -57,11 +84,118 @@ const ProfileDetails = () => {
     }
   };
 
+  const validateForm = (): boolean => {
+    if (!formData.name?.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Ime je obavezno polje',
+        type: 'error'
+      });
+      return false;
+    }
+
+    if (!formData.surname?.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Prezime je obavezno polje',
+        type: 'error'
+      });
+      return false;
+    }
+
+    if (formData.phoneNumbers?.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'Broj telefona je obavezno polje',
+        type: 'error'
+      });
+      return false;
+    }
+
+    if (formData.address?.street === '' || formData.address?.city === '' || formData.address?.state === '' || formData.address?.zipCode === '') {
+      setSnackbar({
+        open: true,
+        message: 'Adresa je obavezno polje',
+        type: 'error'
+      });
+      return false;
+    }
+
+    if (!formData.gender) {
+      setSnackbar({
+        open: true,
+        message: 'Spol je obavezno polje',
+        type: 'error'
+      });
+      return false;
+    }
+
+    if (!formData.description?.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Opis je obavezno polje',
+        type: 'error'
+      });
+      return false;
+    }
+
+    if (formData.location?.latitude === 0 || formData.location?.longitude === 0) {
+      setSnackbar({
+        open: true,
+        message: 'Lokacija je obavezno polje',
+        type: 'error'
+      });
+      return false;
+    }
+
+    if (!formData.pricePerHour || Number(formData.pricePerHour) <= 0) {
+      setSnackbar({
+        open: true,
+        message: 'Cijena po satu mora biti veća od 0',
+        type: 'error'
+      });
+      return false;
+    }
+
+      if (!formData.availability) {
+      setSnackbar({
+        open: true,
+        message: 'Dostupni termini su obavezno polje',
+        type: 'error'
+      });
+      return false;
+    }
+
+    if (!formData.services || formData.services.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'Morate odabrati barem jednu uslugu',
+        type: 'error'
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  useEffect(() => {
+    if (snackbar.open) {
+      const timer = setTimeout(() => {
+        setSnackbar(prev => ({ ...prev, open: false }));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [snackbar.open]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
   
     if (!user) {
       router.push('/login');
+      return;
+    }
+
+    if (!validateForm()) {
       return;
     }
 
@@ -88,7 +222,6 @@ const ProfileDetails = () => {
         });
       }
 
-      // Create provider profile
       await addDoc(collection(db, "providers"), {
         ...formData,
         uid: user.uid,
@@ -97,7 +230,6 @@ const ProfileDetails = () => {
         createdAt: new Date(),
       });
 
-      // Update user role in users collection
       const auth = getAuth();
       if (auth.currentUser) {
         await updateDoc(doc(db, "users", auth.currentUser.uid), {
@@ -105,14 +237,38 @@ const ProfileDetails = () => {
         });
       }
 
+      setSnackbar({
+        open: true,
+        message: 'Uspješno ste se registrovali kao čistač/ica!',
+        type: 'success'
+      });
+
       router.push('/provider-dashboard');
     } catch (error) {
       console.error("Error creating provider profile: ", error);
+      setSnackbar({
+        open: true,
+        message: 'Došlo je do greške prilikom registracije',
+        type: 'error'
+      });
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      {/* Centered Snackbar */}
+      {snackbar.open && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div
+            className={`${
+              snackbar.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            } text-white px-6 py-3 rounded-lg shadow-lg text-center max-w-sm mx-4`}
+          >
+            {snackbar.message}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="profile-form max-w-2xl mx-auto px-6 py-8 rounded-lg shadow-md">
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
           Become a Service Provider

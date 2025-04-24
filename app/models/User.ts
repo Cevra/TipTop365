@@ -7,19 +7,51 @@ export interface UserProfile {
   createdAt: Date;
 }
 
+interface TimeSlot {
+  start: string;
+  end: string;
+}
+
+interface Availability {
+  monday: TimeSlot[];
+  tuesday: TimeSlot[];
+  wednesday: TimeSlot[];
+  thursday: TimeSlot[];
+  friday: TimeSlot[];
+  saturday: TimeSlot[];
+  sunday: TimeSlot[];
+}
+
 export interface ServiceProvider extends UserProfile {
   name: string;
   surname: string;
-  phoneNumbers: string;
-  availableHours: string;
-  address: string;
-  pricePerHour: string;
-  gender: string;
+  phoneNumbers: string[];
+  availability: Availability;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  pricePerHour: number;
+  gender: 'male' | 'female' | 'other';
   description: string;
-  location: string;
-  image: string;
-  services: string[];
-  rating?: number;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  images: string[];
+  services: {
+    id: string;
+    name: string;
+    description?: string;
+  }[];
+  rating?: {
+    average: number;
+    count: number;
+  };
+  languages?: string[];
+  certifications?: string[];
 }
 
 export interface BookingRequest {

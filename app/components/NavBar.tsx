@@ -14,6 +14,7 @@ import { logout } from '@/utils/auth'
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showSnackbar, setShowSnackbar] = useState(false)
   const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
@@ -47,6 +48,11 @@ const NavBar = () => {
       router.push(`/profile/${user.uid}`);
       setIsMenuOpen(false);
     }
+  };
+
+  const handleBellClick = () => {
+    setShowSnackbar(true);
+    setTimeout(() => setShowSnackbar(false), 3000); // Hide after 3 seconds
   };
 
   return (
@@ -130,7 +136,7 @@ const NavBar = () => {
                 onClick={handleBecomeProvider}
                 className="relative inline-flex items-center gap-x-2 rounded-md bg-[#02404B] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
               >
-                Postani dio ekipe
+                Postani čistač
                 <span className="text-lg">+</span>
               </button>
               
@@ -143,7 +149,10 @@ const NavBar = () => {
                 </Link>
               ) : (
                 <div className="flex items-center gap-x-4">
-                  <button className="relative inline-flex items-center justify-center rounded-full bg-gray-100 p-2 text-gray-400 hover:bg-gray-200">
+                  <button 
+                    onClick={handleBellClick} 
+                    className="relative inline-flex items-center justify-center rounded-full bg-gray-100 p-2 text-gray-400 hover:bg-gray-200"
+                  >
                     <BellIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                   <Menu as="div" className="relative">
@@ -287,7 +296,10 @@ const NavBar = () => {
                     <div className="text-base font-medium text-gray-800">Korisnički profil</div>
                     <div className="text-sm font-medium text-gray-500">{userEmail}</div>
                   </div>
-                  <button className="ml-auto relative shrink-0 rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-[#00A6FB] focus:ring-offset-2">
+                  <button 
+                    onClick={handleBellClick}
+                    className="ml-auto relative shrink-0 rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-[#00A6FB] focus:ring-offset-2"
+                  >
                     <BellIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                 </div>
@@ -327,6 +339,12 @@ const NavBar = () => {
           </div>
         </div>
       </Transition>
+
+      {showSnackbar && (
+        <div className="fixed top-20 right-4 bg-gray-800 text-white px-6 py-3 rounded-md shadow-lg transition-all">
+          NEMA NISTA STO NISI IMPLEMENTIRAO BRETEŽ
+        </div>
+      )}
     </nav>
   )
 }

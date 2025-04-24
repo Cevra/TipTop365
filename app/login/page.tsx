@@ -26,7 +26,7 @@ const Login = () => {
 
     try {
       await signInWithEmail(auth, email, password);
-      router.push("/profileDetails");
+      router.push("/");
     } catch (error: any) {
       let errorMessage = "Failed to log in";
       
