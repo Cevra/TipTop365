@@ -126,13 +126,15 @@ const NavBar = () => {
 
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-x-4">
-              <button 
-                onClick={handleBecomeProvider}
-                className="relative inline-flex items-center gap-x-2 rounded-md bg-[#02404B] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
-              >
-                Postani dio ekipe
-                <span className="text-lg">+</span>
-              </button>
+              {pathname !== '/' && (
+                <button 
+                  onClick={handleBecomeProvider}
+                  className="relative inline-flex items-center gap-x-2 rounded-md bg-[#02404B] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
+                >
+                  Postani dio ekipe
+                  <span className="text-lg">+</span>
+                </button>
+              )}
               
               {!user ? (
                 <Link
@@ -201,7 +203,7 @@ const NavBar = () => {
         </div>
       </div>
 
-      {/* Mobile menu panel - updated to dropdown */}
+      {/* Mobile menu panel */}
       <Transition
         show={isMenuOpen}
         enter="transition duration-200 ease-out"
@@ -213,11 +215,11 @@ const NavBar = () => {
         className="absolute top-full inset-x-0 md:hidden"
       >
         <div className="bg-white shadow-lg">
-          <div className="space-y-1 px-2 pt-2 pb-3">
+          <div className="space-y-1 px-2 pb-3 pt-2 flex flex-col items-center">
             {/* Navigation Links */}
             <Link
               href="/"
-              className={`block rounded-md px-3 py-2 text-base font-medium ${
+              className={`block rounded-md px-3 py-2 text-base font-medium text-center w-full ${
                 pathname === '/'
                   ? 'bg-blue-50 text-[#00A6FB]'
                   : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900'
@@ -228,7 +230,7 @@ const NavBar = () => {
             </Link>
             <Link
               href="/page2"
-              className={`block rounded-md px-3 py-2 text-base font-medium ${
+              className={`block rounded-md px-3 py-2 text-base font-medium text-center w-full ${
                 pathname === '/page2'
                   ? 'bg-blue-50 text-[#00A6FB]'
                   : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900'
@@ -239,7 +241,7 @@ const NavBar = () => {
             </Link>
             <Link
               href="/aboutUs"
-              className={`block rounded-md px-3 py-2 text-base font-medium ${
+              className={`block rounded-md px-3 py-2 text-base font-medium text-center w-full ${
                 pathname === '/aboutUs'
                   ? 'bg-blue-50 text-[#00A6FB]'
                   : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900'
@@ -250,7 +252,7 @@ const NavBar = () => {
             </Link>
             <Link
               href="/help"
-              className={`block rounded-md px-3 py-2 text-base font-medium ${
+              className={`block rounded-md px-3 py-2 text-base font-medium text-center w-full ${
                 pathname === '/help'
                   ? 'bg-blue-50 text-[#00A6FB]'
                   : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900'
@@ -263,51 +265,56 @@ const NavBar = () => {
 
           {/* User Section */}
           <div className="border-t border-gray-200 pt-4 pb-3">
-            <div className="px-4 mb-3">
-              <button
-                onClick={handleBecomeProvider}
-                className="block w-full text-center rounded-md bg-[#02404B] px-3 py-2 text-base font-medium text-white hover:bg-opacity-90"
-              >
-                Postani dio ekipe
-                <span className="ml-1">+</span>
-              </button>
-            </div>
+            {pathname !== '/' && (
+              <div className="px-4 mb-3">
+                <button
+                  onClick={handleBecomeProvider}
+                  className="block w-full text-center rounded-md bg-[#02404B] px-3 py-2 text-base font-medium text-white hover:bg-opacity-90"
+                >
+                  Postani dio ekipe
+                  <span className="ml-1">+</span>
+                </button>
+              </div>
+            )}
             
             {user ? (
               <>
-                <div className="flex items-center px-4">
-                  <div className="shrink-0">
+                <div className="flex flex-col items-center px-4 mb-3">
+                  <div className="flex flex-col items-center">
                     <img
                       src={userPhotoUrl}
                       alt="user photo"
-                      className="h-10 w-10 rounded-full"
+                      className="h-10 w-10 rounded-full mb-2"
                     />
-                  </div>
-                  <div className="ml-3">
-                    <div className="text-base font-medium text-gray-800">Korisnički profil</div>
+                    <button 
+                      onClick={handleProfileClick}
+                      className="text-base font-medium text-gray-800 text-center hover:text-[#00A6FB]"
+                    >
+                      Korisnički profil
+                    </button>
                     <div className="text-sm font-medium text-gray-500">{userEmail}</div>
                   </div>
-                  <button className="ml-auto relative shrink-0 rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-[#00A6FB] focus:ring-offset-2">
+                  <button className="mt-2 relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-[#00A6FB] focus:ring-offset-2">
                     <BellIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                 </div>
-                <div className="mt-3 space-y-1 px-2">
+                <div className="mt-3 space-y-1 px-2 flex flex-col items-center">
                   <button
                     onClick={handleProfileClick}
-                    className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    className="block w-full text-center rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                   >
                     Profil
                   </button>
                   <Link
                     href="/settings"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    className="block w-full text-center rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Postavke
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    className="block w-full text-center rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                   >
                     Odjava
                   </button>
