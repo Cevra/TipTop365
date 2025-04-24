@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebaseConfig";
 import Image from "next/image";
 import logoImage from '../../public/logo.svg'; // Adjust the path according to your project structure
+import { signUpWithEmail } from "@/utils/auth"; // Add this import
 
 
 const SignUp = () => {
@@ -17,21 +17,45 @@ const SignUp = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null); // Clear previous errors
+    
+    // Enhanced validation
+    if (!email || !password || !passwordConfirmation) {
+      setError("All fields are required");
+      return;
+    }
+
     if (password !== passwordConfirmation) {
       setError("Passwords do not match");
       return;
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      router.push("/ProfileDetails");
-    } catch (error) {
+      await signUpWithEmail(auth, email, password);
+      router.push("/profileDetails");
+    } catch (error: any) {
+      // Enhanced error handling
+      let errorMessage = "An error occurred during sign up";
+      
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email is already registered';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password should be at least 6 characters';
+          break;
+      }
+      
+      setError(errorMessage);
       console.error("Error creating user:", error);
-      setError("SOMETHING IS WRONG");
     }
   };
 

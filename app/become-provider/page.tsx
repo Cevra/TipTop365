@@ -11,12 +11,10 @@ import {
 import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { useRouter } from "next/navigation";
-import { getAuth } from "firebase/auth";
 import { ServiceProvider } from "../models/User";
 import { useAuth } from "@/contexts/AuthContext";
-import "./styles.css"; // Import the new styles
 
-const ProfileDetails = () => {
+const BecomeProvider = () => {
   const router = useRouter();
   const { user } = useAuth();
   
@@ -37,18 +35,11 @@ const ProfileDetails = () => {
 
   const [image, setImage] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [imageUrl, setImageUrl] = useState('');
 
   const handleMainFormDataChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    if (e.target instanceof HTMLInputElement) {
-      setFormData({...formData, [e.target.name]: e.target.value });
-    } else if (e.target instanceof HTMLTextAreaElement) {
-      setFormData({...formData, description: e.target.value });
-    } else if (e.target instanceof HTMLSelectElement && e.target.name === 'gender') {
-      setFormData({...formData, gender: e.target.value });
-    }
+    setFormData({...formData, [e.target.name]: e.target.value });
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -97,23 +88,20 @@ const ProfileDetails = () => {
         createdAt: new Date(),
       });
 
-      // Update user role in users collection
-      const auth = getAuth();
-      if (auth.currentUser) {
-        await updateDoc(doc(db, "users", auth.currentUser.uid), {
-          role: 'provider'
-        });
-      }
+      // Update user role
+      await updateDoc(doc(db, "users", user.uid), {
+        role: 'provider'
+      });
 
       router.push('/provider-dashboard');
     } catch (error) {
-      console.error("Error creating provider profile: ", error);
+      console.error("Error becoming provider: ", error);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <form onSubmit={handleSubmit} className="profile-form max-w-2xl mx-auto px-6 py-8 rounded-lg shadow-md">
+      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto px-6 py-8 bg-white rounded-lg shadow-md">
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
           Become a Service Provider
         </h2>
@@ -127,10 +115,10 @@ const ProfileDetails = () => {
               type="text"
               id="name"
               name="name"
-              placeholder="Name"
+              placeholder="Enter your name"
               onChange={handleMainFormDataChange}
               required
-              className="form-input-custom"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B]"
             />
           </div>
 
@@ -142,10 +130,10 @@ const ProfileDetails = () => {
               type="text"
               id="surname"
               name="surname"
-              placeholder="Surname"
+              placeholder="Enter your surname"
               onChange={handleMainFormDataChange}
               required
-              className="form-input-custom"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B]"
             />
           </div>
 
@@ -157,53 +145,25 @@ const ProfileDetails = () => {
               type="tel"
               id="phoneNumbers"
               name="phoneNumbers"
-              placeholder="Phone Number"
+              placeholder="Enter your phone number"
               onChange={handleMainFormDataChange}
               required
-              className="form-input-custom"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B]"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
-              Profile Image
-            </label>
-            <input
-              type="file"
-              id="image"
-              onChange={handleChange}
-              className="block w-full text-sm text-gray-500 
-                file:mr-4 file:py-2 file:px-4 
-                file:rounded-full file:border-0 
-                file:text-sm file:font-semibold 
-                file:bg-indigo-50 file:text-indigo-700 
-                hover:file:bg-indigo-100"
-            />
-            {uploadProgress > 0 && (
-              <div className="mt-2">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-indigo-600 transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-                <p className="mt-1 text-sm text-gray-500">{uploadProgress}% Uploaded</p>
-              </div>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-              Address
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+              Location
             </label>
             <input
               type="text"
-              id="address"
-              name="address"
-              placeholder="Address"
+              id="location"
+              name="location"
+              placeholder="Enter your location"
               onChange={handleMainFormDataChange}
               required
-              className="form-input-custom"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B]"
             />
           </div>
 
@@ -216,11 +176,12 @@ const ProfileDetails = () => {
               name="gender"
               onChange={handleMainFormDataChange}
               required
-              className="form-input-custom"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B]"
             >
-              <option value="">Select Gender</option>
+              <option value="">Select gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
@@ -231,43 +192,35 @@ const ProfileDetails = () => {
             <textarea
               id="description"
               name="description"
-              placeholder="Tell us about yourself"
+              placeholder="Describe your experience and services"
               onChange={handleMainFormDataChange}
               required
               rows={4}
-              className="form-input-custom"
-            ></textarea>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-              Location
-            </label>
-            <input
-              type="text"
-              id="location"
-              name="location"
-              placeholder="Your location"
-              onChange={handleMainFormDataChange}
-              required
-              className="form-input-custom"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B]"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+            <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
+              Profile Image
             </label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleMainFormDataChange}
-              required
-              disabled
-              className="form-input-custom bg-gray-50"
+              type="file"
+              id="image"
+              accept="image/*"
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B]"
             />
+            {uploadProgress > 0 && (
+              <div className="mt-2">
+                <div className="bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-[#02404B] h-2.5 rounded-full"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="form-group">
@@ -283,7 +236,7 @@ const ProfileDetails = () => {
               required
               min="0"
               step="0.01"
-              className="form-input-custom"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B]"
             />
           </div>
 
@@ -298,7 +251,7 @@ const ProfileDetails = () => {
               placeholder="e.g., Mon-Fri 9AM-5PM"
               onChange={handleMainFormDataChange}
               required
-              className="form-input-custom"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B]"
             />
           </div>
 
@@ -314,7 +267,7 @@ const ProfileDetails = () => {
                 const selected = Array.from(e.target.selectedOptions, option => option.value);
                 setFormData(prev => ({ ...prev, services: selected }));
               }}
-              className="form-input-custom h-32"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#02404B] focus:border-[#02404B] h-32"
             >
               <option value="regular-cleaning">Regular Cleaning</option>
               <option value="deep-cleaning">Deep Cleaning</option>
@@ -327,7 +280,7 @@ const ProfileDetails = () => {
 
           <button
             type="submit"
-            className="submit-button-custom"
+            className="w-full px-4 py-2 text-lg font-semibold text-white bg-[#02404B] rounded-md hover:bg-opacity-90 transition-opacity"
           >
             Register as Provider
           </button>
@@ -337,4 +290,4 @@ const ProfileDetails = () => {
   );
 };
 
-export default ProfileDetails;
+export default BecomeProvider; 

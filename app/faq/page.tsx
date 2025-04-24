@@ -31,7 +31,6 @@ const FAQAccordion = () => {
 
   return (
     <div className="min-h-screen">
-      <NavBar />
       <div className="bg-gray-50 flex items-center justify-center">
         <div className="w-full max-w-7xl mx-auto px-6 md:px-16 lg:px-32 py-8">
           {/* Section 1 */}
@@ -146,7 +145,6 @@ const FAQAccordion = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

@@ -1,38 +1,53 @@
 'use client';
 
-import { Disclosure, Menu, Transition } from '@headlessui/react'
+import { Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon, UserCircleIcon, BellIcon } from '@heroicons/react/24/outline'
-import { useEffect, useState } from 'react'
+import { useState, Fragment } from 'react'
 
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@/firebaseConfig'
-import { onAuthStateChanged } from 'firebase/auth'
 import Image from 'next/image'
 import logoImage from '../../public/logo.svg'
-import { tree } from 'next/dist/build/templates/app-page'
+import { useAuth } from '@/contexts/AuthContext'
+import { logout } from '@/utils/auth'
 
 const NavBar = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  
+  const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
 
-  useEffect(() => {
-    console.log(isMenuOpen)
-  }, [isMenuOpen])
+  const handleSignOut = async () => {
+    try {
+      await logout(auth)
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAuthenticated(!!user)
-    })
-    return () => unsubscribe()
-  }, [])
+  const userEmail = user?.email || 'name@example.com'
+  const userPhotoUrl = user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email?.charAt(0) || 'U'}&background=02404B&color=fff`
 
   const handleClickLogo = () => {
     router.push('/')
   }
+
+  const handleBecomeProvider = () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    router.push('/become-provider');
+  };
+
+  const handleProfileClick = () => {
+    if (user?.uid) {
+      router.push(`/profile/${user.uid}`);
+      setIsMenuOpen(false);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-sm relative z-50">
@@ -111,19 +126,21 @@ const NavBar = () => {
 
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-x-4">
-              {!isAuthenticated ? (
-                <>
-                  <Link href="/login" className="relative inline-flex items-center gap-x-2 rounded-md bg-[#02404B] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90">
-                    Postani dio ekipe
-                    <span className="text-lg">+</span>
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="relative inline-flex items-center justify-center rounded-full bg-gray-100 p-2 text-gray-400 hover:bg-gray-200"
-                  >
-                    <UserCircleIcon className="h-10 w-10" aria-hidden="true" />
-                  </Link>
-                </>
+              <button 
+                onClick={handleBecomeProvider}
+                className="relative inline-flex items-center gap-x-2 rounded-md bg-[#02404B] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
+              >
+                Postani dio ekipe
+                <span className="text-lg">+</span>
+              </button>
+              
+              {!user ? (
+                <Link
+                  href="/login"
+                  className="relative inline-flex items-center justify-center rounded-full bg-gray-100 p-2 text-gray-400 hover:bg-gray-200"
+                >
+                  <UserCircleIcon className="h-10 w-10" aria-hidden="true" />
+                </Link>
               ) : (
                 <div className="flex items-center gap-x-4">
                   <button className="relative inline-flex items-center justify-center rounded-full bg-gray-100 p-2 text-gray-400 hover:bg-gray-200">
@@ -132,37 +149,50 @@ const NavBar = () => {
                   <Menu as="div" className="relative">
                     <Menu.Button className="relative flex rounded-full bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
                       <img
-                        src="/default-avatar.jpg"
+                        src={userPhotoUrl}
                         alt="user photo"
                         className="h-10 w-10 rounded-full"
                       />
                     </Menu.Button>
-                    <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
-                      <Menu.Item>
-                        {({ active }) => (
-                          <Link href="/ProfileDetails" className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}>
-                            Profil
-                          </Link>
-                        )}
-                      </Menu.Item>
-                      <Menu.Item>
-                        {({ active }) => (
-                          <Link href="/settings" className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}>
-                            Postavke
-                          </Link>
-                        )}
-                      </Menu.Item>
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-               //                 onClick={handleSignOut}
-                            className={`block w-full text-left px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
-                          >
-                            Odjava
-                          </button>
-                        )}
-                      </Menu.Item>
-                    </Menu.Items>
+                    <Transition
+                      as={Fragment}
+                      enter="transition ease-out duration-100"
+                      enterFrom="transform opacity-0 scale-95"
+                      enterTo="transform opacity-100 scale-100"
+                      leave="transition ease-in duration-75"
+                      leaveFrom="transform opacity-100 scale-100"
+                      leaveTo="transform opacity-0 scale-95"
+                    >
+                      <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
+                        <Menu.Item>
+                          {({ active }) => (
+                            <button 
+                              onClick={handleProfileClick}
+                              className={`block w-full text-left px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
+                            >
+                              Profil
+                            </button>
+                          )}
+                        </Menu.Item>
+                        <Menu.Item>
+                          {({ active }) => (
+                            <Link href="/settings" className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}>
+                              Postavke
+                            </Link>
+                          )}
+                        </Menu.Item>
+                        <Menu.Item>
+                          {({ active }) => (
+                            <button
+                              onClick={handleSignOut}
+                              className={`block w-full text-left px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
+                            >
+                              Odjava
+                            </button>
+                          )}
+                        </Menu.Item>
+                      </Menu.Items>
+                    </Transition>
                   </Menu>
                 </div>
               )}
@@ -233,34 +263,41 @@ const NavBar = () => {
 
           {/* User Section */}
           <div className="border-t border-gray-200 pt-4 pb-3">
-            {isAuthenticated ? (
+            <div className="px-4 mb-3">
+              <button
+                onClick={handleBecomeProvider}
+                className="block w-full text-center rounded-md bg-[#02404B] px-3 py-2 text-base font-medium text-white hover:bg-opacity-90"
+              >
+                Postani dio ekipe
+                <span className="ml-1">+</span>
+              </button>
+            </div>
+            
+            {user ? (
               <>
                 <div className="flex items-center px-4">
                   <div className="shrink-0">
                     <img
-                      src="/default-avatar.jpg"
+                      src={userPhotoUrl}
                       alt="user photo"
                       className="h-10 w-10 rounded-full"
                     />
                   </div>
                   <div className="ml-3">
                     <div className="text-base font-medium text-gray-800">Korisnički profil</div>
-                    <div className="text-sm font-medium text-gray-500">name@example.com</div>
+                    <div className="text-sm font-medium text-gray-500">{userEmail}</div>
                   </div>
                   <button className="ml-auto relative shrink-0 rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-[#00A6FB] focus:ring-offset-2">
-                    <span className="absolute -inset-1.5" />
-                    <span className="sr-only">View notifications</span>
                     <BellIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                 </div>
                 <div className="mt-3 space-y-1 px-2">
-                  <Link
-                    href="/ProfileDetails"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                    onClick={() => setIsMenuOpen(false)}
+                  <button
+                    onClick={handleProfileClick}
+                    className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                   >
                     Profil
-                  </Link>
+                  </button>
                   <Link
                     href="/settings"
                     className="block rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
@@ -269,9 +306,8 @@ const NavBar = () => {
                     Postavke
                   </Link>
                   <button
-                    // onClick={handleSignOut}
+                    onClick={handleSignOut}
                     className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                    onClick={() => setIsMenuOpen(false)}
                   >
                     Odjava
                   </button>
@@ -281,11 +317,10 @@ const NavBar = () => {
               <div className="px-4">
                 <Link
                   href="/login"
-                  className="block w-full text-center rounded-md bg-[#02404B] px-3 py-2 text-base font-medium text-white hover:bg-opacity-90"
+                  className="block w-full text-center rounded-md border border-[#02404B] px-3 py-2 text-base font-medium text-[#02404B] hover:bg-gray-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Postani dio ekipe
-                  <span className="ml-1">+</span>
+                  Prijavi se
                 </Link>
               </div>
             )}

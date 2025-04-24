@@ -15,13 +15,38 @@ const Login = () => {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleSignInWithEmail = async () => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!email || !password) {
+      setError("All fields are required");
+      return;
+    }
+
     try {
-      const userCredential = await signInWithEmail(auth, email, password);
-      router.push("/Profile");
-    } catch (error) {
-      console.error("Error signing in with email and password:", error);
-      setError("SOMETHING IS WRONG");
+      await signInWithEmail(auth, email, password);
+      router.push("/profileDetails");
+    } catch (error: any) {
+      let errorMessage = "Failed to log in";
+      
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          errorMessage = 'Invalid email or password';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed attempts. Please try again later';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled';
+          break;
+        default:
+          errorMessage = 'An error occurred during sign in';
+      }
+      
+      setError(errorMessage);
+      console.error("Error signing in:", error);
     }
   };
 
@@ -45,7 +70,7 @@ const Login = () => {
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
               Sign In
             </h1>
-            <form onSubmit={handleSignInWithEmail} className="space-y-4 md:space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
               <div>
                 <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
                 <input
@@ -75,7 +100,6 @@ const Login = () => {
               {error && <p className="text-red-500 mt-2">{error}</p>}
               <button
                 type="submit"
-                onClick={handleSignInWithEmail}
                 className="w-full text-white bg-gradient-to-r from-[#02404B] to-[#238B9E] hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
                 Sign In

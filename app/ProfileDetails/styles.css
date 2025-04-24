@@ -1,6 +1,13 @@
+@media (max-width: 599px) {
+  .profile-form {
+    margin: 0;
+  }
+}
+
+/* Custom styles that complement Tailwind */
 .profile-form {
   max-width: 600px;
-   margin: 40px auto; 
+  margin: 40px auto;
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
@@ -23,9 +30,21 @@
   font-weight: bold;
 }
 
+/* Custom form input styles */
+.form-input-custom {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md text-base;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.form-input-custom:focus {
+  @apply outline-none ring-2 ring-indigo-500 border-indigo-500;
+}
+
+/* Original input styles */
 input[type="text"],
 input[type="tel"],
 input[type="number"],
+input[type="email"],
 textarea {
   width: 100%;
   padding: 10px;
@@ -42,15 +61,12 @@ select {
   font-size: 16px;
 }
 
-.submit-button {
+/* Submit button styles */
+.submit-button-custom {
+  @apply w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-[#02404B] to-[#238B9E] rounded-md hover:opacity-90 transition-opacity;
   display: block;
   width: 100%;
   padding: 10px;
   cursor: pointer;
   font-size: 18px;
-}
-@media (max-width: 599px) {
-  .profile-form {
-     margin: 0; /* Set margin to 0 for mobile devices */
-   }
-  }
+} 

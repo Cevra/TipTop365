@@ -8,7 +8,6 @@ import Footer from '..//components/Footer';
 export default function AboutUs() {
   return (
     <>
-    <NavBar />
       <Head>
         <title>About Us | Tip Top 365</title>
         <meta name="description" content="Learn about Tip Top 365's mission, values, and how we work." />
@@ -63,8 +62,6 @@ export default function AboutUs() {
 
         </section>
       </main>
-<Footer/>
-
     </>
   )
 }
