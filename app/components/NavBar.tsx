@@ -307,7 +307,6 @@ const NavBar = () => {
                     onClick={handleBellClick}
                     className="ml-auto relative shrink-0 rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-[#00A6FB] focus:ring-offset-2"
                   >
-                  <button className="mt-2 relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-[#00A6FB] focus:ring-offset-2">
                     <BellIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                 </div>
