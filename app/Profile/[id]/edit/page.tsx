@@ -27,6 +27,10 @@ interface SnackbarState {
   type: 'success' | 'error';
 }
 
+const BUNNY_STORAGE_ZONE = 'tiptop-storage';
+const BUNNY_API_KEY = 'c627727a-4f25-4fc0-bd364a57ef64-597a-48c2';
+const BUNNY_PULL_ZONE_URL = 'https://tiptop-365.b-cdn.net/';
+
 const ProfileEditPage = () => {
   const params = useParams();
   const router = useRouter();
@@ -111,6 +115,14 @@ const ProfileEditPage = () => {
 
         if (userSnap.exists()) {
           const userData = userSnap.data() as UserProfile;
+          // Convert old URLs to new Pull Zone URLs
+          if (userData.profileImageUrl) {
+            userData.profileImageUrl = userData.profileImageUrl.replace(
+              'tiptop-storage.b-cdn.net',
+              'tiptop-365.b-cdn.net'
+            );
+          }
+          console.log("Profile image URL:", userData.profileImageUrl);
           setProfile(userData);
           setFormData(userData);
 
@@ -309,7 +321,6 @@ const ProfileEditPage = () => {
     }
 
     try {
-      // Prepare update data
       const updateData: Partial<UserProfile> = {
         firstName: formData.firstName || '',
         lastName: formData.lastName || '',
@@ -318,24 +329,74 @@ const ProfileEditPage = () => {
 
       // Handle profile image
       if (profileImage) {
-        const storageRef = ref(storage, `profile-images/${user.uid}/${profileImage.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, profileImage);
+        try {
+          setUploadProgress(10);
 
-        await new Promise((resolve, reject) => {
-          uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              setUploadProgress(progress);
-            },
-            reject,
-            async () => {
-              const imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
-              updateData.profileImageUrl = imageUrl;
-              resolve(imageUrl);
+          // Delete old image if it exists
+          if (profile.profileImageUrl) {
+            try {
+              // Extract the path from the old URL
+              const oldImagePath = profile.profileImageUrl
+                .replace(BUNNY_PULL_ZONE_URL, '')
+                .replace('https://tiptop-storage.b-cdn.net/', ''); // Handle old URLs too
+
+              // Delete the old image
+              const deleteResponse = await fetch(
+                `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${oldImagePath}`, 
+                {
+                  method: 'DELETE',
+                  headers: {
+                    'AccessKey': BUNNY_API_KEY
+                  }
+                }
+              );
+
+              if (!deleteResponse.ok) {
+                console.error('Failed to delete old image, continuing with upload...');
+              }
+            } catch (deleteError) {
+              console.error('Error deleting old image:', deleteError);
+              // Continue with upload even if delete fails
             }
-          );
-        });
+          }
+
+          // Upload new image
+          const timestamp = Date.now();
+          const safeFileName = profileImage.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const filename = `profile-images/${user.uid}/${timestamp}-${safeFileName}`;
+          
+          setUploadProgress(20);
+
+          // Upload to BunnyCDN Storage
+          const response = await fetch(`https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${filename}`, {
+            method: 'PUT',
+            headers: {
+              'AccessKey': BUNNY_API_KEY,
+              'Content-Type': profileImage.type || 'application/octet-stream',
+            },
+            body: profileImage,
+          });
+
+          setUploadProgress(80);
+
+          if (!response.ok) {
+            throw new Error(`Failed to upload image to BunnyCDN: ${response.statusText}`);
+          }
+
+          // Use basic Pull Zone URL without optimization parameters
+          const imageUrl = `${BUNNY_PULL_ZONE_URL}${filename}`;
+          updateData.profileImageUrl = imageUrl;
+          
+          setUploadProgress(100);
+        } catch (error) {
+          console.error('Error uploading to BunnyCDN:', error);
+          setSnackbar({
+            open: true,
+            message: "Greška pri uploadovanju slike. Pokušajte ponovo.",
+            type: 'error'
+          });
+          return;
+        }
       }
 
       // Handle address
@@ -457,9 +518,32 @@ const ProfileEditPage = () => {
                 <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                   {(profileImage ? URL.createObjectURL(profileImage) : profile?.profileImageUrl) ? (
                     <img 
-                      src={profileImage ? URL.createObjectURL(profileImage) : profile?.profileImageUrl}
+                      src={profileImage 
+                        ? URL.createObjectURL(profileImage) 
+                        : profile?.profileImageUrl?.replace('tiptop-storage.b-cdn.net', 'tiptop-365.b-cdn.net')}
                       alt="Profilna Slika" 
                       className="h-full w-full object-cover"
+                      onError={(e) => {
+                        console.error("Image failed to load:", e);
+                        const imgUrl = profile?.profileImageUrl;
+                        console.log("Original image URL:", imgUrl);
+                        console.log("Converted image URL:", imgUrl?.replace('tiptop-storage.b-cdn.net', 'tiptop-365.b-cdn.net'));
+                        
+                        // Try to fetch the image directly
+                        if (imgUrl) {
+                          const newUrl = imgUrl.replace('tiptop-storage.b-cdn.net', 'tiptop-365.b-cdn.net');
+                          fetch(newUrl)
+                            .then(response => {
+                              console.log("Image fetch status:", response.status, response.statusText);
+                              if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                              }
+                            })
+                            .catch(error => {
+                              console.error("Image fetch error:", error);
+                            });
+                        }
+                      }}
                     />
                   ) : (
                     <span className="text-3xl text-gray-500">
