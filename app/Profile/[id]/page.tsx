@@ -156,18 +156,29 @@ const ProfilePage = () => {
       return () => clearTimeout(timer);
     }
   }, [snackbar.open]);
-
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
     if (name === 'phoneNumber') {
-      // Only allow numbers and limit to 6 digits
-      const numbersOnly = value.replace(/[^\d]/g, '');
-      if (numbersOnly.length <= 7) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: `+3876${numbersOnly}`
-        }));
+      // Format phone number with +3876 prefix
+      if (value.startsWith('+3876')) {
+        // Allow only numbers after +3876 prefix and limit to total length of 12 (+3876 + 7 digits)
+        const numbersOnly = value.replace(/[^\d+]/g, '');
+        if (numbersOnly.length <= 12) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: numbersOnly
+          }));
+        }
+      } else {
+        // If user is typing a new number, add the prefix
+        const numbersOnly = value.replace(/[^\d]/g, '');
+        if (numbersOnly.length <= 7) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: `+3876${numbersOnly}`
+          }));
+        }
       }
       return;
     }

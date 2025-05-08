@@ -162,12 +162,25 @@ const ProfileEditPage = () => {
     const { name, value } = e.target;
     
     if (name === 'phoneNumber') {
-      // Only allow numbers and limit to 7 digits after +3876
-      const numbersOnly = value.replace(/[^\d]/g, '');
-      if (numbersOnly.length <= 7) {
+      // Remove all non-digit characters except '+'
+      let numbersOnly = value.replace(/[^\d+]/g, '');
+      
+      // If the input doesn't start with +387, add it
+      if (!numbersOnly.startsWith('+387')) {
+        if (numbersOnly.startsWith('387')) {
+          numbersOnly = '+' + numbersOnly;
+        } else if (numbersOnly.startsWith('0')) {
+          numbersOnly = '+387' + numbersOnly.substring(1);
+        } else if (!numbersOnly.startsWith('+')) {
+          numbersOnly = '+387' + numbersOnly;
+        }
+      }
+
+      // Limit the total length to 12 characters (+387 + 6 digits)
+      if (numbersOnly.length <= 13) {
         setFormData(prev => ({
           ...prev,
-          [name]: `+3876${numbersOnly}`
+          [name]: numbersOnly
         }));
       }
       return;
@@ -614,14 +627,17 @@ const ProfileEditPage = () => {
                   Broj Telefona
                 </label>
                 <input
-                  type="text"
+                  type="tel"
                   name="phoneNumber"
                   value={formData.phoneNumber || ''}
                   onChange={handleInputChange}
-                  placeholder="+38761234567"
+                  placeholder="+387 6X XXX XXX"
                   className={inputClasses}
                   required
                 />
+                <p className="mt-1 text-sm text-gray-500">
+                  Format: +387 6X XXX XXX
+                </p>
               </div>
             </div>
 

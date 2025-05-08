@@ -8,7 +8,7 @@ import {
   getDownloadURL,
   UploadTaskSnapshot,
 } from "firebase/storage";
-import { collection, addDoc, updateDoc, doc, getDocs } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, getDocs, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { useRouter } from "next/navigation";
 import { ServiceProvider } from "../models/User";
@@ -84,6 +84,43 @@ const BecomeProvider = () => {
     type: 'success'
   });
 
+  // Fill with dummy data for testing
+  const fillDummyData = () => {
+    setFormData({
+      ...formData,
+      pricePerHour: 25,
+      description: 'Profesionalno čišćenje sa 5 godina iskustva. Specijaliziran za dubinsko čišćenje stanova i poslovnih prostora.',
+      address: {
+        street: 'Zmaja od Bosne 7',
+        city: 'Sarajevo',
+        state: 'FBiH',
+        zipCode: '71000',
+      },
+      languages: ['Bosanski', 'Engleski'],
+      certifications: ['Certifikat za profesionalno čišćenje'],
+      location: {
+        latitude: 43.8563,
+        longitude: 18.4131,
+      },
+    });
+    
+    setSelectedServices([
+      { id: 'apartmentCleaning', name: 'Apartment Cleaning' },
+      { id: 'officeCleaning', name: 'Office Cleaning' }
+    ]);
+    
+    setAvailability({
+      ...availability,
+      monday: [{ start: '09:00', end: '17:00' }],
+      wednesday: [{ start: '09:00', end: '17:00' }],
+      friday: [{ start: '09:00', end: '17:00' }],
+      saturday: [{ start: '10:00', end: '14:00' }],
+      tuesday: [],
+      thursday: [],
+      sunday: []
+    });
+  };
+
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -107,6 +144,10 @@ const BecomeProvider = () => {
   useEffect(() => {
     setFormData(prev => ({ ...prev, services: selectedServices }));
   }, [selectedServices]);
+
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, availability: availability }));
+  }, [availability]);
 
   const handleMainFormDataChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -234,71 +275,48 @@ const BecomeProvider = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
   
-    if (!user) {
-      router.push('/login');
-      return;
-    }
+    if (!user) return;
 
-    // Validate all required fields
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
-      const documentUrls: string[] = [];
-      
-      // Upload all documents
-      if (documents.length > 0) {
-        for (const document of documents) {
-          const storageRef = ref(storage, `provider-documents/${user.uid}/${document.name}`);
-          const uploadTask = uploadBytesResumable(storageRef, document);
-          
-          await new Promise((resolve, reject) => {
-            uploadTask.on(
-              "state_changed",
-              (snapshot: UploadTaskSnapshot) => {
-                const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                setUploadProgress(progress);
-              },
-              reject,
-              async () => {
-                const url = await getDownloadURL(uploadTask.snapshot.ref);
-                documentUrls.push(url);
-                resolve(url);
-              }
-            );
-          });
-        }
-      }
+      // Get existing user data first
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
 
-      // Filter out empty days before saving
-      const filteredAvailability = Object.entries(availability).reduce((acc, [day, slots]) => {
-        if (slots.length > 0) {
-          acc[day as DayOfWeek] = slots;
-        }
-        return acc;
-      }, {} as Availability);
-
-      // Create provider profile
-      await addDoc(collection(db, "providers"), {
-        ...formData,
-        availability: filteredAvailability,
-        services: selectedServices,
-        uid: user.uid,
+      // Update user document with provider role
+      await updateDoc(userRef, {
         role: 'provider',
-        documentsUrls: documentUrls,
-        createdAt: new Date(),
-        lastUpdated: new Date(),
+        lastUpdated: new Date()
       });
 
-      // Update user role
-      await updateDoc(doc(db, "users", user.uid), {
-        role: 'provider'
+      // Create provider document with combined data
+      const providerRef = doc(db, "providers", user.uid);
+      await setDoc(providerRef, {
+        ...formData,
+        uid: user.uid,
+        firstName: userData?.firstName || '',
+        lastName: userData?.lastName || '',
+        email: user.email,
+        profileImageUrl: userData?.profileImageUrl || '',
+        phoneNumber: userData?.phoneNumber || '',
+        role: 'provider',
+        services: selectedServices,
+        availability: availability,
+        createdAt: new Date(),
+        lastUpdated: new Date()
+      });
+
+      console.log("Provider data saved:", {
+        ...formData,
+        services: selectedServices,
+        availability: availability
       });
 
       setSnackbar({
         open: true,
-        message: 'Uspješno ste se registrovali kao čistač/ica!',
+        message: "Uspješno ste postali pružalac usluga!",
         type: 'success'
       });
 
@@ -372,10 +390,11 @@ const BecomeProvider = () => {
                     type="number"
                     id="pricePerHour"
                     name="pricePerHour"
+                    value={formData.pricePerHour || ''}
                     placeholder="Unesite vašu satnicu"
                     onChange={handleMainFormDataChange}
                     required
-                    min="0"
+                    min="1"
                     step="0.01"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#02404B] focus:ring-[#02404B] sm:text-sm placeholder:text-gray-400"
                   />
@@ -558,6 +577,13 @@ const BecomeProvider = () => {
                     className="w-full sm:w-auto px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     Odustani
+                  </button>
+                  <button
+                    type="button"
+                    onClick={fillDummyData}
+                    className="w-full sm:w-auto px-6 py-2 border border-blue-300 bg-blue-50 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                  >
+                    Popuni test podatke
                   </button>
                 </div>
               </div>
