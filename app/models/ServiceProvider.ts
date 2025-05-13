@@ -6,6 +6,7 @@ export interface ServiceProvider {
   profileImageUrl?: string;
   description?: string;
   phoneNumber?: string;
+  pricePerHour?: number;
   services: Array<{
     id: string;
     name: string;

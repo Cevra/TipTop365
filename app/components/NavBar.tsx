@@ -2,7 +2,7 @@
 
 import { Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon, UserCircleIcon, BellIcon } from '@heroicons/react/24/outline'
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect } from 'react'
 
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
@@ -11,6 +11,8 @@ import Image from 'next/image'
 import logoImage from '../../public/logo.svg'
 import { useAuth } from '@/contexts/AuthContext'
 import { logout } from '@/utils/auth'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/firebaseConfig'
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -18,6 +20,21 @@ const NavBar = () => {
   const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const [profile, setProfile] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user?.uid) {
+        const userRef = doc(db, "users", user.uid)
+        const userSnap = await getDoc(userRef)
+        if (userSnap.exists()) {
+          setProfile(userSnap.data())
+        }
+      }
+    }
+
+    fetchProfile()
+  }, [user])
 
   const handleSignOut = async () => {
     try {
@@ -29,7 +46,7 @@ const NavBar = () => {
   }
 
   const userEmail = user?.email || 'name@example.com'
-  const userPhotoUrl = user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email?.charAt(0) || 'U'}&background=02404B&color=fff`
+  const userPhotoUrl = profile?.profileImageUrl || `https://ui-avatars.com/api/?name=${userEmail?.charAt(0) || 'U'}&background=02404B&color=fff`
 
   const handleClickLogo = () => {
     router.push('/')
@@ -51,9 +68,9 @@ const NavBar = () => {
   };
 
   const handleBellClick = () => {
-    setShowSnackbar(true);
-    setTimeout(() => setShowSnackbar(false), 3000); // Hide after 3 seconds
-  };
+    setShowSnackbar(true)
+    setTimeout(() => setShowSnackbar(false), 3000) // Hide after 3 seconds
+  }
 
   return (
     <nav className="bg-white shadow-sm relative z-50">
@@ -158,11 +175,11 @@ const NavBar = () => {
                     <BellIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                   <Menu as="div" className="relative">
-                    <Menu.Button className="relative flex rounded-full bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
+                    <Menu.Button className="relative flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                       <img
                         src={userPhotoUrl}
-                        alt="user photo"
-                        className="h-10 w-10 rounded-full"
+                        alt="Profile"
+                        className="h-10 w-10 rounded-full object-cover"
                       />
                     </Menu.Button>
                     <Transition
@@ -292,15 +309,9 @@ const NavBar = () => {
                   <div className="flex flex-col items-center">
                     <img
                       src={userPhotoUrl}
-                      alt="user photo"
-                      className="h-10 w-10 rounded-full mb-2"
+                      alt="Profile"
+                      className="h-10 w-10 rounded-full object-cover mb-2"
                     />
-                    <button
-                      onClick={handleProfileClick}
-                      className="text-base font-medium text-gray-800 text-center hover:text-[#00A6FB]"
-                    >
-                      Korisnički profil
-                    </button>
                     <div className="text-sm font-medium text-gray-500">{userEmail}</div>
                   </div>
                   <button

@@ -39,6 +39,7 @@ export default function Home() {
             description: data.description || '',
             services: data.services || [],
             phoneNumber: data.phoneNumber || '',
+            pricePerHour: data.pricePerHour || 0,
             address: data.address || {},
             availability: data.availability || {},
             rating: data.rating || { average: 0, count: 0 },
