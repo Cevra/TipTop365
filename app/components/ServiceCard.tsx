@@ -89,7 +89,7 @@ const ServiceCard = ({ provider }: ServiceCardProps) => {
     return stars;
   };
 
-  const rating = provider.rating?.average || 3.95;
+  const rating = provider.rating?.average || 3.65;
 
   return (
     <div className="bg-white border border-gray-200 shadow-sm dark:bg-gray-800 dark:border-gray-700 flex flex-col h-full overflow-hidden rounded">
@@ -153,7 +153,7 @@ const ServiceCard = ({ provider }: ServiceCardProps) => {
       {/* Booking button at bottom */}
       <div className="px-5 pb-4">
         <Link href={`/booking/${provider.uid}`} className="block">
-          <button className="w-full bg-primary-700 hover:bg-primary-800 text-white font-bold py-2 px-4 rounded transition-all duration-300 shadow-md hover:shadow-lg">
+          <button className="w-full bg-fresh-500 hover:bg-primary-800 text-white font-bold py-2 px-4 rounded transition-all duration-300 shadow-md hover:shadow-lg">
             Rezerviši
           </button>
         </Link>
