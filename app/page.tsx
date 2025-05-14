@@ -2,31 +2,56 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, DocumentData } from "firebase/firestore";
+import { collection, getDocs, query, where, getDoc, doc } from "firebase/firestore";
 import { db } from '@/firebaseConfig';
-import { ProfileData } from './models/Profile';
 import HeroSection from './components/HeroSection';
 import ServiceGrid from './components/ServiceGrid';
 import { useAuth } from '@/contexts/AuthContext';
+import { ServiceProvider } from './models/ServiceProvider';
 
 export default function Home() {
   const router = useRouter();
   const { loading: authLoading } = useAuth();
-  const [profiles, setProfiles] = useState<ProfileData[]>([]);
+  const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const q = query(collection(db, "profiles"));
-        const querySnapshot = await getDocs(q);
-        const profilesData = querySnapshot.docs.map(doc => {
-          const rawData = doc.data() as DocumentData;
-          return rawData as ProfileData;
+        console.log("Starting to fetch providers...");
+        
+        // Fetch from providers collection directly
+        const providersRef = collection(db, "providers");
+        const providersSnapshot = await getDocs(providersRef);
+        
+        console.log("Found providers:", providersSnapshot.size);
+
+        const providersData = providersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log("Provider data:", data);
+          
+          return {
+            uid: doc.id,
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            profileImageUrl: data.profileImageUrl || '',
+            description: data.description || '',
+            services: data.services || [],
+            phoneNumber: data.phoneNumber || '',
+            pricePerHour: data.pricePerHour || 0,
+            address: data.address || {},
+            availability: data.availability || {},
+            rating: data.rating || { average: 0, count: 0 },
+            createdAt: data.createdAt,
+            lastUpdated: data.lastUpdated
+          } as ServiceProvider;
         });
-        setProfiles(profilesData);
+
+        console.log("Final providers data:", providersData);
+        setProviders(providersData);
       } catch (error) {
-        console.error("Error fetching profiles:", error);
+        console.error("Error fetching providers:", error);
       } finally {
         setLoading(false);
       }
@@ -35,7 +60,7 @@ export default function Home() {
     if (!authLoading) {
       fetchProfiles();
     }
-  }, [authLoading, router]);
+  }, [authLoading]);
 
   if (loading || authLoading) {
     return (
@@ -48,7 +73,18 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-inherit flex flex-col">
       <HeroSection />
-      <ServiceGrid profiles={profiles} />
+      {providers.length === 0 ? (
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-semibold text-gray-600">
+            Trenutno nema dostupnih čistača
+          </h2>
+          <p className="mt-2 text-gray-500">
+            Budite prvi koji će se pridružiti našoj platformi!
+          </p>
+        </div>
+      ) : (
+        <ServiceGrid providers={providers} />
+      )}
     </div>
   );
 }

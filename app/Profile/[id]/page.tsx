@@ -8,6 +8,52 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/firebaseConfig";
 import { useAuth } from "@/contexts/AuthContext";
 import { Address } from "@/app/models/Address";
+import { serviceIconMap } from "@/app/components/ServiceIcons";
+
+interface TimeSlot {
+  start: string;
+  end: string;
+}
+
+interface Availability {
+  monday: TimeSlot[];
+  tuesday: TimeSlot[];
+  wednesday: TimeSlot[];
+  thursday: TimeSlot[];
+  friday: TimeSlot[];
+  saturday: TimeSlot[];
+  sunday: TimeSlot[];
+}
+
+interface ServiceProvider {
+  uid: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  profileImageUrl: string;
+  pricePerHour: number;
+  rating: {
+    average: number;
+    count: number;
+  };
+  services: Array<{ id: string; name: string }>;
+  availability: Availability;
+  description: string;
+  languages: string[];
+  certifications: string[];
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  role: string;
+}
 
 interface UserProfile {
   uid: string;
@@ -20,6 +66,23 @@ interface UserProfile {
   role?: 'user' | 'provider';
   createdAt?: Date;
   addressId?: string;
+  description?: string;
+  pricePerHour?: number;
+  gender?: 'male' | 'female' | 'other';
+  services?: string[];
+  availability?: {
+    monday: string[];
+    tuesday: string[];
+    wednesday: string[];
+    thursday: string[];
+    friday: string[];
+    saturday: string[];
+    sunday: string[];
+  };
+  rating?: {
+    average?: number;
+    count?: number;
+  };
 }
 
 interface SnackbarState {
@@ -32,6 +95,7 @@ const ProfilePage = () => {
   const params = useParams();
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [providerData, setProviderData] = useState<ServiceProvider | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -105,10 +169,11 @@ const ProfilePage = () => {
   };
 
   useEffect(() => {
-    const fetchProfileAndAddress = async () => {
+    const fetchProfileData = async () => {
       if (!params.id) return;
 
       try {
+        // Fetch user profile
         const userRef = doc(db, "users", params.id as string);
         const userSnap = await getDoc(userRef);
 
@@ -116,6 +181,17 @@ const ProfilePage = () => {
           const userData = userSnap.data() as UserProfile;
           setProfile(userData);
           setFormData(userData);
+
+          // If user is a provider, fetch provider data
+          if (userData.role === 'provider') {
+            const providerRef = doc(db, "providers", params.id as string);
+            const providerSnap = await getDoc(providerRef);
+            
+            if (providerSnap.exists()) {
+              const providerData = providerSnap.data() as ServiceProvider;
+              setProviderData(providerData);
+            }
+          }
 
           // Fetch address if addressId exists
           if (userData.addressId) {
@@ -144,7 +220,7 @@ const ProfilePage = () => {
       }
     };
 
-    fetchProfileAndAddress();
+    fetchProfileData();
   }, [params.id, user]);
 
   useEffect(() => {
@@ -156,18 +232,29 @@ const ProfilePage = () => {
       return () => clearTimeout(timer);
     }
   }, [snackbar.open]);
-
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
     if (name === 'phoneNumber') {
-      // Only allow numbers and limit to 6 digits
-      const numbersOnly = value.replace(/[^\d]/g, '');
-      if (numbersOnly.length <= 7) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: `+3876${numbersOnly}`
-        }));
+      // Format phone number with +3876 prefix
+      if (value.startsWith('+3876')) {
+        // Allow only numbers after +3876 prefix and limit to total length of 12 (+3876 + 7 digits)
+        const numbersOnly = value.replace(/[^\d+]/g, '');
+        if (numbersOnly.length <= 12) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: numbersOnly
+          }));
+        }
+      } else {
+        // If user is typing a new number, add the prefix
+        const numbersOnly = value.replace(/[^\d]/g, '');
+        if (numbersOnly.length <= 7) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: `+3876${numbersOnly}`
+          }));
+        }
       }
       return;
     }
@@ -461,6 +548,106 @@ const ProfilePage = () => {
     return requiredFields.every(field => field && field.trim() !== '');
   };
 
+  // Add this helper function to format and order days
+  const formatDayName = (day: string) => {
+    const dayNames = {
+      monday: 'Ponedjeljak',
+      tuesday: 'Utorak',
+      wednesday: 'Srijeda',
+      thursday: 'Četvrtak',
+      friday: 'Petak',
+      saturday: 'Subota',
+      sunday: 'Nedjelja'
+    };
+    return dayNames[day as keyof typeof dayNames];
+  };
+
+  // Add this to order the days
+  const orderedDays = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday'
+  ];
+
+  // Add this helper function at the component level
+  const TimelineBar = ({ slots, day }: { slots: Array<{ start: string; end: string }>, day: string }) => {
+    const [tooltipContent, setTooltipContent] = useState('');
+    const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    const getTimePosition = (time: string) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return (hours + minutes / 60) * (100 / 24);
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const hour = Math.floor((x / rect.width) * 24);
+      
+      setTooltipPosition({
+        x: e.clientX,
+        y: e.clientY
+      });
+      setTooltipContent(`${formatDayName(day)}: ${hour.toString().padStart(2, '0')}:00`);
+    };
+
+    const getTimeBlocks = () => {
+      return slots.map((slot, index) => {
+        const startPercent = getTimePosition(slot.start);
+        const endPercent = getTimePosition(slot.end);
+        const width = endPercent - startPercent;
+
+        return (
+          <div
+            key={index}
+            className="absolute h-full bg-fresh-400 transition-all duration-300 ease-in-out"
+            style={{
+              left: `${startPercent}%`,
+              width: `${width}%`,
+            }}
+            onMouseEnter={() => {
+              setTooltipContent(`${formatDayName(day)}: ${slot.start} - ${slot.end}`);
+              setShowTooltip(true);
+            }}
+            onMouseLeave={() => setShowTooltip(false)}
+          />
+        );
+      });
+    };
+
+    return (
+      <div className="relative">
+        <div 
+          className="relative h-10 bg-gray-100 rounded-lg overflow-hidden hover:shadow-sm transition-shadow duration-200"
+          onMouseMove={handleMouseMove}
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          {/* Time blocks */}
+          {getTimeBlocks()}
+        </div>
+
+        {/* Floating tooltip */}
+        {showTooltip && (
+          <div
+            className="fixed z-50 bg-gray-800 text-white text-xs py-1 px-2 rounded pointer-events-none transform -translate-x-1/2 -translate-y-full"
+            style={{
+              left: tooltipPosition.x,
+              top: tooltipPosition.y - 10,
+            }}
+          >
+            {tooltipContent}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -470,166 +657,205 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Snackbar */}
-      <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ${
-        snackbar.open ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'
-      }`}>
-        <div className={`px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
-          snackbar.type === 'success' 
-            ? 'bg-[#02404B] text-white' 
-            : 'bg-red-500 text-white'
-        }`}>
-          {snackbar.type === 'success' ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          )}
-          <span className="font-medium">{snackbar.message}</span>
-        </div>
-      </div>
-
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        <div className="bg-white rounded-xl shadow-lg p-6 sm:p-10 max-w-7xl mx-auto">
-          {/* Profile Header */}
-          <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-6 sm:gap-0 mb-8 sm:mb-12">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 sm:gap-10">
-              <div className="relative group">
-                <div className="h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden ring-4 ring-[#02404B]/10">
-                  {profile?.profileImageUrl ? (
-                    <img 
-                      src={profile.profileImageUrl} 
-                      alt="Profilna Slika" 
-                      className="h-full w-full object-cover"
+    <div className="bg-gray-50">
+      <main>
+        {/* Profile Section */}
+        <div className="bg-white">
+          <div className="mx-auto max-w-7xl px-4 pt-16 pb-24 sm:px-6 sm:pt-24 sm:pb-32">
+            {/* Main Profile Card */}
+            <div className="bg-white border border-gray-200 shadow-lg rounded-2xl overflow-hidden">
+              <div className="flex flex-col md:flex-row">
+                {/* Left side - Image */}
+                <div className="md:w-1/3">
+                  <div className="h-full">
+                    <img
+                      src={profile?.profileImageUrl || '/default-avatar.png'}
+                      alt={`${profile?.firstName} ${profile?.lastName}`}
+                      className="w-full h-[300px] md:h-[500px] object-cover"
                     />
-                  ) : (
-                    <span className="text-4xl sm:text-5xl text-gray-500">
-                      {profile?.email?.charAt(0)?.toUpperCase() || "K"}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                  {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : 'Novi Korisnik'}
-                </h1>
-                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 text-base sm:text-lg text-gray-600">
-                  <span className="flex items-center gap-2">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    {profile?.email}
-                  </span>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-full ${
-                      isProfileComplete() 
-                        ? 'bg-[#02404B]/10 text-[#02404B]'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {isProfileComplete() ? 'Profil popunjen' : 'Profil nije popunjen'}
-                    </span>
-                    <span className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-full ${
-                      profile?.role === 'provider'
-                        ? 'bg-[#02404B]/10 text-[#02404B]'
-                        : 'bg-[#02404B]/5 text-[#02404B]'
-                    }`}>
-                      {profile?.role === 'provider' ? 'Čistač' : 'Korisnik'}
-                    </span>
                   </div>
                 </div>
-              </div>
-            </div>
-            {user && profile && user.uid === profile.uid && (
-              <Link
-                href={`/profile/${profile.uid}/edit`}
-                className="relative inline-flex items-center gap-x-3 rounded-lg bg-[#02404B] px-8 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white shadow-sm hover:bg-opacity-90 transition-colors w-full sm:w-auto justify-center"
-              >
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-                Uredi Profil
-              </Link>
-            )}
-          </div>
 
-          {/* Profile Content */}
-          <div className="grid gap-8 sm:gap-12">
-            {/* Contact Information */}
-            <div className="border-b pb-8 sm:pb-10">
-              <h2 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-gray-900 flex items-center gap-3">
-                <svg className="w-6 h-6 sm:w-7 sm:h-7 text-[#02404B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                Kontakt Informacije
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-                {profile?.phoneNumber && (
-                  <div className="bg-gray-50 p-6 sm:p-8 rounded-xl">
-                    <span className="text-base sm:text-lg text-gray-500">Telefon</span>
-                    <p className="text-lg sm:text-xl text-gray-900 font-medium mt-2">{profile.phoneNumber}</p>
-                  </div>
-                )}
-                {profile?.email && (
-                  <div className="bg-gray-50 p-6 sm:p-8 rounded-xl">
-                    <span className="text-base sm:text-lg text-gray-500">Email</span>
-                    <p className="text-lg sm:text-xl text-gray-900 font-medium mt-2">{profile.email}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Address Information */}
-            {address && (
-              <div>
-                <h2 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-gray-900 flex items-center gap-3">
-                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-[#02404B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Adresa
-                </h2>
-                <div className="bg-gray-50 p-6 sm:p-10 rounded-xl space-y-6 sm:space-y-8">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+                {/* Right side - Info */}
+                <div className="md:w-2/3 p-6 md:p-8 flex flex-col">
+                  <div className="flex flex-col md:flex-row justify-between items-start mb-6">
                     <div>
-                      <span className="text-base sm:text-lg text-gray-500">Ulica i broj</span>
-                      <p className="text-lg sm:text-xl text-gray-900 font-medium mt-2">
-                        {address.street} {address.houseNumber}
-                      </p>
-                    </div>
-                    {(address.floor || address.apartment) && (
-                      <div>
-                        <span className="text-base sm:text-lg text-gray-500">Sprat/Stan</span>
-                        <p className="text-lg sm:text-xl text-gray-900 font-medium mt-2">
-                          {address.floor && `Sprat ${address.floor}`}
-                          {address.floor && address.apartment && ', '}
-                          {address.apartment && `Stan ${address.apartment}`}
+                      <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                        {profile?.firstName} {profile?.lastName}
+                      </h1>
+                      
+                      {/* Rating component */}
+                      <div className="flex items-center mt-4">
+                        {[0, 1, 2, 3, 4].map((rating) => (
+                          <svg 
+                            key={rating}
+                            className="w-8 h-8 text-yellow-300 me-1"
+                            aria-hidden="true" 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="currentColor" 
+                            viewBox="0 0 22 20"
+                          >
+                            <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z"/>
+                          </svg>
+                        ))}
+                        <p className="ms-2 text-xl font-medium text-gray-500">
+                          {profile?.rating?.average?.toFixed(2) || "4.95"}
                         </p>
                       </div>
-                    )}
-                    <div>
-                      <span className="text-base sm:text-lg text-gray-500">Grad i poštanski broj</span>
-                      <p className="text-lg sm:text-xl text-gray-900 font-medium mt-2">
-                        {address.postalCode} {address.city}
-                      </p>
                     </div>
-                    <div>
-                      <span className="text-base sm:text-lg text-gray-500">Država</span>
-                      <p className="text-lg sm:text-xl text-gray-900 font-medium mt-2">{address.country}</p>
+
+                    {/* Price per hour */}
+                    <div className="mt-4 md:mt-0 text-xl font-semibold text-gray-700 bg-gray-50 px-4 py-2 rounded-xl shadow-sm">
+                      {providerData?.pricePerHour 
+                        ? `${Number(providerData.pricePerHour).toFixed(2)} KM/H` 
+                        : 'N/A'}
                     </div>
                   </div>
-                  {address.additionalInfo && (
-                    <div className="border-t pt-6 sm:pt-8 mt-6 sm:mt-8">
-                      <span className="text-base sm:text-lg text-gray-500">Dodatne informacije</span>
-                      <p className="text-lg sm:text-xl text-gray-900 mt-2">{address.additionalInfo}</p>
-                    </div>
-                  )}
+
+                  {/* Contact Information */}
+                  <div className="space-y-4">
+                    {profile?.email && (
+                      <div className="flex items-center p-3 bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300">
+                        <svg className="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-gray-700">{profile.email}</span>
+                      </div>
+                    )}
+                    {profile?.phoneNumber && (
+                      <div className="flex items-center p-3 bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300">
+                        <svg className="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <span className="text-gray-700">{profile.phoneNumber}</span>
+                      </div>
+                    )}
+                    {address && (
+                      <div className="flex items-center p-3 bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300">
+                        <svg className="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="text-gray-700">
+                          {address.street} {address.houseNumber}, {address.postalCode} {address.city}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Button */}
+                  <div className="mt-auto pt-6">
+                    {user && profile && user.uid === profile.uid ? (
+                      <Link
+                        href={`/profile/${profile.uid}/edit`}
+                        className="w-full inline-flex justify-center items-center px-6 py-3 text-lg font-medium rounded-xl text-white bg-[#02404B] hover:bg-[#02404B]/90 transition-all duration-300 shadow-md hover:shadow-xl"
+                      >
+                        Uredi Profil
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/booking/${profile?.uid}`}
+                        className="w-full inline-flex justify-center items-center px-6 py-3 text-lg font-medium rounded-xl text-white bg-primary-700 hover:bg-primary-800 transition-all duration-300 shadow-md hover:shadow-xl"
+                      >
+                        Rezerviši
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* Additional Information */}
+            <div className="mt-8 space-y-8">
+              {/* Description Section */}
+              <section className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Dodatne informacije
+                </h2>
+                <div className="prose max-w-none">
+                  {address?.additionalInfo && (
+                    <p className="text-gray-700 mb-4">{address.additionalInfo}</p>
+                  )}
+                  {providerData?.description && (
+                    <p className="text-gray-700 whitespace-pre-wrap">{providerData.description}</p>
+                  )}
+                </div>
+              </section>
+
+              {/* Services Section */}
+              {providerData?.services && providerData.services.length > 0 && (
+                <section className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    Usluge
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {providerData.services.map((service, index) => {
+                      const ServiceIcon = serviceIconMap[service.name] || null;
+                      return (
+                        <div 
+                          key={index} 
+                          className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300 text-center"
+                        >
+                          {ServiceIcon ? (
+                            <ServiceIcon className="h-12 w-12 text-fresh-400 mb-3" />
+                          ) : (
+                            <svg className="h-12 w-12 text-fresh-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                          <span className="text-gray-700 font-medium">{service.name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+
+              {/* Availability Section */}
+              {providerData?.availability && (
+                <section className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    Dostupnost
+                  </h2>
+                  <div className="space-y-6">
+                    {orderedDays.map(day => {
+                      const slots = providerData.availability[day] || [];
+                      return (
+                        <div key={day} className="bg-gray-50 rounded-xl p-4 hover:shadow-md transition-all duration-300">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {formatDayName(day)}
+                            </h3>
+                            <div className="text-xs text-gray-500">
+                              {slots.length > 0 
+                                ? slots.map(slot => `${slot.start}-${slot.end}`).join(', ')
+                                : 'Nije dostupno'}
+                            </div>
+                          </div>
+                          
+                          {slots.length > 0 ? (
+                            <div className="relative">
+                              <TimelineBar slots={slots} day={day} />
+                              
+                              {/* Time labels */}
+                              <div className="flex justify-between mt-2">
+                                <span className="text-xs text-gray-400">00:00</span>
+                                <span className="text-xs text-gray-400">12:00</span>
+                                <span className="text-xs text-gray-400">24:00</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="h-10 bg-gray-50 rounded-lg flex items-center justify-center transition-all duration-300">
+                              <span className="text-xs text-gray-400">Nije dostupno</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+            </div>
           </div>
         </div>
       </main>
