@@ -34,7 +34,7 @@ const BUNNY_PULL_ZONE_URL = 'https://tiptop-365.b-cdn.net/';
 const ProfileEditPage = () => {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,28 +101,53 @@ const ProfileEditPage = () => {
 
   useEffect(() => {
     const fetchProfileAndAddress = async () => {
-      if (!params.id) return;
+      console.log("Fetch Profile Started");
+      console.log("Params ID:", params.id);
+      console.log("Current User:", user);
+      console.log("Auth Loading:", authLoading);
 
-      // Redirect if not authorized
-      if (user?.uid !== params.id) {
+      // Wait for auth to be initialized
+      if (authLoading) {
+        console.log("Auth still loading...");
+        return;
+      }
+
+      if (!params.id) {
+        console.log("No params.id found");
+        return;
+      }
+
+      // Only redirect if user is not logged in or trying to edit someone else's profile
+      if (!user) {
+        console.log("No user logged in - redirecting");
+        router.push(`/profile/${params.id}`);
+        return;
+      }
+
+      if (user.uid !== params.id) {
+        console.log("User ID mismatch - redirecting");
+        console.log("User ID:", user.uid);
+        console.log("Params ID:", params.id);
         router.push(`/profile/${params.id}`);
         return;
       }
 
       try {
+        console.log("Attempting to fetch user document from Firestore");
         const userRef = doc(db, "users", params.id as string);
         const userSnap = await getDoc(userRef);
 
+        console.log("Firestore response:", userSnap);
+        console.log("Document exists:", userSnap.exists());
         if (userSnap.exists()) {
+          console.log("Document data:", userSnap.data());
           const userData = userSnap.data() as UserProfile;
-          // Convert old URLs to new Pull Zone URLs
           if (userData.profileImageUrl) {
             userData.profileImageUrl = userData.profileImageUrl.replace(
               'tiptop-storage.b-cdn.net',
               'tiptop-365.b-cdn.net'
             );
           }
-          console.log("Profile image URL:", userData.profileImageUrl);
           setProfile(userData);
           setFormData(userData);
 
@@ -135,10 +160,27 @@ const ProfileEditPage = () => {
             }
           }
         } else {
-          router.push(`/profile/${params.id}`);
+          console.log("Profile not found - creating new profile");
+          // Create a new profile for the user instead of redirecting
+          const newUserProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || '',
+            createdAt: new Date(),
+            role: 'user'
+          };
+          
+          try {
+            await setDoc(doc(db, "users", user.uid), newUserProfile);
+            console.log("New profile created successfully");
+            setProfile(newUserProfile);
+            setFormData(newUserProfile);
+          } catch (error) {
+            console.error("Error creating new profile:", error);
+            setError("Greška pri kreiranju profila");
+          }
         }
       } catch (err) {
-        console.error("Error fetching profile:", err);
+        console.error("Error fetching/creating profile:", err);
         setError("Greška pri učitavanju profila");
       } finally {
         setLoading(false);
@@ -146,7 +188,7 @@ const ProfileEditPage = () => {
     };
 
     fetchProfileAndAddress();
-  }, [params.id, user, router]);
+  }, [params.id, user, router, authLoading]);
 
   useEffect(() => {
     if (snackbar.open) {
@@ -447,7 +489,7 @@ const ProfileEditPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#02404B]"></div>

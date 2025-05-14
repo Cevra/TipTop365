@@ -108,7 +108,7 @@ const Footer = () => {
         {/* Copyright and Social Media Icons */}
         <div className="mt-8 flex items-start px-20 justify-between flex-row">
           <p className="text-[#26B7D1] text-xs">
-            &copy; 2024 Vaše Firma. Sva prava rezervirana.
+            &copy; 2025 TipTop365. Sva prava rezervirana.
           </p>
           <div className="flex space-x-4">
             <a href="#" target="_blank" rel="noopener noreferrer">

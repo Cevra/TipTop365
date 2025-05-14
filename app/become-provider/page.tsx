@@ -8,7 +8,7 @@ import {
   getDownloadURL,
   UploadTaskSnapshot,
 } from "firebase/storage";
-import { collection, addDoc, updateDoc, doc, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { useRouter } from "next/navigation";
 import { ServiceProvider } from "../models/User";
@@ -90,10 +90,10 @@ const BecomeProvider = () => {
         const servicesRef = collection(db, "services");
         await getDocs(servicesRef);
         const servicesData = [
-          { id: 'airbnbCleaning', name: 'Airbnb Cleaning' },
-          { id: 'apartmentCleaning', name: 'Apartment Cleaning' },
-          { id: 'officeCleaning', name: 'Office Cleaning' },
-          { id: 'windowCleaning', name: 'Window Cleaning' }
+          { id: 'airbnb', name: 'Airbnb' },
+          { id: 'apartment', name: 'Apartment' },
+          { id: 'office', name: 'Office' },
+          { id: 'window', name: 'Window' }
         ];
         setServices(servicesData);
       } catch (error) {
@@ -107,6 +107,28 @@ const BecomeProvider = () => {
   useEffect(() => {
     setFormData(prev => ({ ...prev, services: selectedServices }));
   }, [selectedServices]);
+
+  // Add check for existing provider profile
+  useEffect(() => {
+    const checkExistingProvider = async () => {
+      if (!user) return;
+
+      try {
+        const providersRef = collection(db, "providers");
+        const q = query(providersRef, where("uid", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          // Update the redirection path to match your app's routing structure
+          router.push('/provider/edit-profile');
+        }
+      } catch (error) {
+        console.error("Error checking existing provider: ", error);
+      }
+    };
+
+    checkExistingProvider();
+  }, [user, router]);
 
   const handleMainFormDataChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -286,15 +308,16 @@ const BecomeProvider = () => {
         services: selectedServices,
         uid: user.uid,
         role: 'provider',
-        documentsUrls: documentUrls,
+        //documentsUrls: documentUrls,
         createdAt: new Date(),
         lastUpdated: new Date(),
       });
 
+      //Uncomment when you want to add update of user documents
       // Update user role
-      await updateDoc(doc(db, "users", user.uid), {
+      /*await updateDoc(doc(db, "users", user.uid), {
         role: 'provider'
-      });
+      });*/
 
       setSnackbar({
         open: true,

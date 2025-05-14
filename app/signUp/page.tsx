@@ -37,7 +37,7 @@ const SignUp = () => {
 
     try {
       await signUpWithEmail(auth, email, password);
-      router.push("/profileDetails");
+      router.push(`/profile/${auth.currentUser?.uid}`);
     } catch (error: any) {
       // Enhanced error handling
       let errorMessage = "An error occurred during sign up";

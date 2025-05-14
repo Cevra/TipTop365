@@ -67,6 +67,7 @@ const NavBar = () => {
                 alt="Company Logo"
                 width={144}
                 height={64}
+                className="cursor-pointer"
               />
             </div>
 
@@ -83,9 +84,9 @@ const NavBar = () => {
                 Home
               </Link>
               <Link
-                href="/page2"
+                href="/usluge"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
-                  pathname === '/page2' 
+                  pathname === '/usluge' 
                     ? 'border-[#00A6FB] text-gray-900' 
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
@@ -238,9 +239,9 @@ const NavBar = () => {
               Home
             </Link>
             <Link
-              href="/page2"
+              href="/usluge"
               className={`block rounded-md px-3 py-2 text-base font-medium text-center w-full ${
-                pathname === '/page2'
+                pathname === '/usluge'
                   ? 'bg-blue-50 text-[#00A6FB]'
                   : 'text-gray-900 hover:bg-gray-50 hover:text-gray-900'
               }`}
