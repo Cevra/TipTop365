@@ -1,0 +1,27 @@
+name: DB Backup
+
+# Nightly logical dump of the production DB → Bunny storage (plan D21).
+# Requires repo secrets: DIRECT_URL (prod, unpooled), BUNNY_STORAGE_ZONE,
+# BUNNY_STORAGE_PASSWORD. No-op-safe: without Bunny secrets the dump is created
+# but not uploaded. Neon also provides PITR within the branch history window as
+# a second line of defense (see docs/OPS.md).
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    env:
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
+      BUNNY_STORAGE_PASSWORD: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # ubuntu-latest ships postgresql-client (pg_dump). Verify + pin major if needed.
+      - run: pg_dump --version
+      - run: node scripts/db-dump.mjs "$(date -u +%Y%m%dT%H%M%SZ)"

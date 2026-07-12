@@ -2,6 +2,16 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-12 — tiptop-e0.9-ops-baseline (E0.9)
+
+- **Ops baseline (plan D21), documented in `docs/OPS.md` (code vs. account-needed matrix).**
+- **Sentry** client+server+edge (`sentry.*.config.ts` + `instrumentation.ts`) — **inert unless `NEXT_PUBLIC_SENTRY_DSN` set**; release tagged from deploy SHA. `next.config.mjs` wraps `withSentryConfig` only when `SENTRY_AUTH_TOKEN` present. `lib/server/observability.ts` `reportError` wired into the HTTP mapper (unhandled 500 → Sentry). Verified: build passes with Sentry installed and **no DSN**.
+- **`GET /api/health`** — liveness + DB ping (200 `{status,db:ok}` / 503). Live-verified. For an external uptime monitor + cron dead-man checks.
+- **Backups**: `scripts/db-dump.mjs` (pg_dump → Bunny via storage API, no-op-safe without creds) + nightly `.github/workflows/backup.yml`. Neon PITR documented as the second line.
+- **Staging + seed refresh**: documented (Neon branch + Vercel env; refresh via migrate deploy + seed).
+- `.env.example`: Sentry + Bunny keys (all optional).
+- **Deferred (needs your accounts, tracked in OPS.md):** Sentry DSN, Bunny secrets, staging deployment, uptime-monitor wiring. All code is inert/no-op until those exist — nothing blocks dev or the build.
+
 ## 2026-07-12 — tiptop-e0.10-ui-primitives (E0.10)
 
 - **Design tokens locked (plan §20.3):** booking-status color tokens (`status.matching/active/review/done/alert/idle`) added to `tailwind.config.ts` — used only by StatusBadge/StatusTimeline.

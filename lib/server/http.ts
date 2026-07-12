@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 import { AuthError } from '@/lib/server/auth/session';
+import { reportError } from '@/lib/server/observability';
 
 // Standard response envelope (plan §10): success → { data }, failure →
 // { error: { code, details? } }. All route handlers use these so clients get a
@@ -35,6 +36,7 @@ export function toErrorResponse(err: unknown): NextResponse {
   if (err instanceof AuthError) return fail(err.message, err.status);
   if (err instanceof ZodError) return fail('VALIDATION_ERROR', 400, err.flatten());
   console.error('Unhandled API error:', err);
+  reportError(err); // → Sentry when a DSN is configured (no-op otherwise)
   return fail('INTERNAL_ERROR', 500);
 }
 
