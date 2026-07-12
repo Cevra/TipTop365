@@ -18,12 +18,15 @@ Two-sided cleaning marketplace for Bosnia ("Uber for cleaning"). Next.js 14 App 
 ## Commands (established in E0; keep this list current)
 
 ```
-npm run dev            # local app
+npm run dev              # local app
 npm run lint && npm run typecheck
-npm run test           # vitest unit + integration
-npm run test:e2e       # playwright (gates only, not per-edit)
-npx prisma migrate dev / npx prisma db seed / npx prisma studio
+npm run test             # vitest UNIT only (fast gate loop, no DB)
+npm run test:integration # vitest against Postgres (needs DATABASE_URL)
+npm run test:e2e         # playwright, prod build (gates only, not per-edit)
+npm run db:migrate / db:studio / db:seed:flags
 ```
+
+UI: build screens from `app/components/ui` primitives (see `/styleguide` in dev). Money/dates via `lib/shared/format.ts` (integer fenings). API routes use the `lib/server/http` envelope (`ok`/`fail`/`handler`) + zod via `lib/server/validation`. Testing layers: `docs/TESTING.md`. Ops/observability: `docs/OPS.md`.
 
 ## Workflow
 
