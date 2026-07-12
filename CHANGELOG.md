@@ -2,6 +2,14 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-12 — tiptop-e0.6-realtime-polling (E0.6)
+
+- **Firestore data access decommissioned (plan D3 v1.1).** `firestore.rules` deny-all tombstone + `firebase.json`. ⚠️ These rules are **not deployed** by committing them (Firebase rules deploy separately) — they record the target state. Do NOT `firebase deploy` them until the remaining client-side Firestore reads (home, become-provider, profile, navbar) are migrated to Postgres in E1/E3/E4, or the current prototype's reads break.
+- **RealtimeChannel adapter**: `lib/client/useLiveChannel.ts` — polls `/live`, tracks a cursor, pauses while the tab is hidden and resumes on focus. The single seam for realtime; SSE/WebSocket later means reimplementing only this hook.
+- **Endpoint skeleton**: `GET /api/bookings/:id/live?cursor=` — enforces auth (401 verified live), returns a correctly-shaped empty `LiveSnapshot`. Real status/location/messages wired in E4.5 (chat) / E4.6 (map) once the tables exist (E1.3).
+- `lib/shared/realtime.ts`: shared `LiveSnapshot`/`LiveMessage`/`LiveLocation` types, poll-cadence constants, pure `resolvePollInterval` (pauses when hidden).
+- Tests: +3 (49 total).
+
 ## 2026-07-12 — tiptop-e0.5-feature-flags (E0.5)
 
 - **Feature flags (plan D12).** First Prisma model `FeatureFlag` (`feature_flags` table) + migration `20260712141839_feature_flags` (applied to Neon).
