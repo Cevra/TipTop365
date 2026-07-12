@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/server/auth/session';
+import { ok, fail, handler } from '@/lib/server/http';
 import type { LiveSnapshot } from '@/lib/shared/realtime';
 
 export const runtime = 'nodejs';
@@ -12,17 +12,13 @@ export const runtime = 'nodejs';
  * auth and returns an empty, correctly-shaped snapshot so the client hook and
  * its consumers can be built against the real contract.
  */
-export async function GET(
+export const GET = handler(async (
   request: Request,
   { params }: { params: { id: string } },
-) {
+) => {
   const session = await getSessionUser();
-  if (!session) {
-    return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 });
-  }
-  if (!params.id) {
-    return NextResponse.json({ error: 'MISSING_BOOKING_ID' }, { status: 400 });
-  }
+  if (!session) return fail('UNAUTHENTICATED', 401);
+  if (!params.id) return fail('MISSING_BOOKING_ID', 400);
 
   const cursor = new URL(request.url).searchParams.get('cursor');
 
@@ -35,8 +31,5 @@ export async function GET(
     cursor: cursor ?? null,
   };
 
-  return NextResponse.json(
-    { data: snapshot },
-    { headers: { 'Cache-Control': 'no-store' } },
-  );
-}
+  return ok(snapshot, { headers: { 'Cache-Control': 'no-store' } });
+});

@@ -1,29 +1,40 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createSessionCookie, SESSION_COOKIE, SESSION_MAX_AGE_MS } from '@/lib/server/auth/session';
+import { ok, fail, ApiError, handler } from '@/lib/server/http';
+import { parseBody } from '@/lib/server/validation';
+import { rateLimit, RATE_LIMITS } from '@/lib/server/rateLimit';
 
 // firebase-admin needs the Node runtime (not Edge).
 export const runtime = 'nodejs';
+
+const bodySchema = z.object({ idToken: z.string().min(1) });
+
+function clientIp(request: Request): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
 
 /**
  * POST /api/auth/session
  * Body: { idToken } — a fresh Firebase ID token from the client SDK.
  * Sets an httpOnly `__session` cookie the server can verify on every request.
+ * Rate-limited per IP (auth preset).
  */
-export async function POST(request: Request) {
-  let idToken: unknown;
-  try {
-    ({ idToken } = await request.json());
-  } catch {
-    return NextResponse.json({ error: 'INVALID_BODY' }, { status: 400 });
+export const POST = handler(async (request: Request) => {
+  const { allowed, retryAfterSec } = rateLimit(`auth:${clientIp(request)}`, RATE_LIMITS.auth);
+  if (!allowed) {
+    return fail('RATE_LIMITED', 429, { retryAfterSec });
   }
 
-  if (typeof idToken !== 'string' || idToken.length === 0) {
-    return NextResponse.json({ error: 'MISSING_ID_TOKEN' }, { status: 400 });
-  }
+  const { idToken } = await parseBody(request, bodySchema);
 
   try {
     const cookie = await createSessionCookie(idToken);
-    const res = NextResponse.json({ data: { ok: true } });
+    const res = ok({ ok: true });
     res.cookies.set(SESSION_COOKIE, cookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -34,13 +45,13 @@ export async function POST(request: Request) {
     return res;
   } catch {
     // Bad/expired ID token, or admin credentials not configured.
-    return NextResponse.json({ error: 'INVALID_ID_TOKEN' }, { status: 401 });
+    throw new ApiError('INVALID_ID_TOKEN', 401);
   }
-}
+});
 
 /** DELETE /api/auth/session — clear the session cookie (logout). */
-export async function DELETE() {
-  const res = NextResponse.json({ data: { ok: true } });
+export function DELETE(): NextResponse {
+  const res = ok({ ok: true });
   res.cookies.set(SESSION_COOKIE, '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

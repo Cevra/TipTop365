@@ -2,6 +2,16 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-12 — tiptop-e0.7-api-primitives (E0.7)
+
+- **API primitives (plan §10, §12.5, D13).** `zod` added.
+- `lib/server/http.ts`: response envelope `ok(data)` / `fail(code,status,details)` → `{ data }` / `{ error: { code, details? } }`; `ApiError`; `toErrorResponse` mapping (ApiError→code, AuthError→401/403, ZodError→400 VALIDATION_ERROR, unknown→clean 500 no-leak); `handler()` wrapper.
+- `lib/server/validation.ts`: `parseBody`/`parseQuery` (zod; failures become 400 via the wrapper).
+- Rate limiting: pure token-bucket `lib/shared/rateLimit.ts` (`consumeToken`, clock injected) + `lib/server/rateLimit.ts` in-memory store with `RATE_LIMITS` presets. ⚠️ store is **per-instance** — swap for Redis/Postgres behind the same interface for multi-instance prod (noted in file).
+- `lib/server/audit.ts`: `audit(entry)` with a pluggable sink (default = structured console log; E9 registers a Prisma sink via `setAuditSink` once the `audit_log` table exists in E1.5). Never throws into the caller. Pure `buildAuditRecord` unit-tested.
+- Adopted the envelope in the two existing routes; **added per-IP rate limiting to `POST /api/auth/session`** (auth preset, live-verified: 429 after 10 rapid calls; 400 VALIDATION_ERROR on bad body).
+- Test infra: aliased `server-only`/`client-only` to an empty stub in `vitest.config.ts` so server modules load in the node test env. Tests +14 (63 total).
+
 ## 2026-07-12 — tiptop-e0.6-realtime-polling (E0.6)
 
 - **Firestore data access decommissioned (plan D3 v1.1).** `firestore.rules` deny-all tombstone + `firebase.json`. ⚠️ These rules are **not deployed** by committing them (Firebase rules deploy separately) — they record the target state. Do NOT `firebase deploy` them until the remaining client-side Firestore reads (home, become-provider, profile, navbar) are migrated to Postgres in E1/E3/E4, or the current prototype's reads break.
