@@ -16,6 +16,7 @@ interface TimeSlot {
 }
 
 interface Availability {
+  [day: string]: TimeSlot[];
   monday: TimeSlot[];
   tuesday: TimeSlot[];
   wednesday: TimeSlot[];

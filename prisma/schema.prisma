@@ -1,0 +1,15 @@
+// System of record: PostgreSQL on Neon (plan D3).
+// DATABASE_URL  = pooled connection (app runtime)
+// DIRECT_URL    = unpooled connection (migrations)
+// Prisma CLI reads .env, not .env.local — npm scripts wrap with `dotenv -e .env.local`.
+// Domain models land in E1 (plan §4); this file intentionally has none yet.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}

@@ -8,7 +8,7 @@ import {
   getDownloadURL,
   UploadTaskSnapshot,
 } from "firebase/storage";
-import { collection, addDoc, updateDoc, doc, getDocs, getDoc, setDoc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, getDocs, getDoc, setDoc, query, where } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { useRouter } from "next/navigation";
 import { ServiceProvider } from "@/lib/shared/types";
@@ -568,13 +568,6 @@ const BecomeProvider = () => {
                     className="w-full sm:w-auto px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     Odustani
-                  </button>
-                  <button
-                    type="button"
-                    onClick={fillDummyData}
-                    className="w-full sm:w-auto px-6 py-2 border border-blue-300 bg-blue-50 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
-                  >
-                    Popuni test podatke
                   </button>
                 </div>
               </div>
