@@ -17,7 +17,8 @@
     "postinstall": "prisma generate",
     "db:ping": "dotenv -e .env.local -- node scripts/db-ping.mjs",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
-    "db:studio": "dotenv -e .env.local -- prisma studio"
+    "db:studio": "dotenv -e .env.local -- prisma studio",
+    "db:seed:flags": "dotenv -e .env.local -- node scripts/seed-flags.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",

@@ -2,6 +2,15 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-12 — tiptop-e0.5-feature-flags (E0.5)
+
+- **Feature flags (plan D12).** First Prisma model `FeatureFlag` (`feature_flags` table) + migration `20260712141839_feature_flags` (applied to Neon).
+- `lib/shared/featureFlags.ts`: typed flag registry (`ALLOW_UNVERIFIED_BOOKINGS`, `CASH_PAYMENTS_ENABLED`, `LIVE_MAP_ENABLED`, `SMS_ENABLED`) + pure `resolveFlag` (precedence: **env `FLAG_<KEY>` override > DB > coded default**).
+- `lib/server/featureFlags.ts`: `isEnabled(key)` (DB read is best-effort — falls back to env/default if DB unreachable, never throws) + `setFlag` upsert (admin UI in E9).
+- Seeded the two launch flags in Neon (both `true`); `npm run db:seed:flags` for reproducibility.
+- Tests: +16 covering precedence, bool parsing (true/false synonyms), unrecognized-value fallthrough, registry integrity (46 total).
+- Migration note: first migration in the repo — run `npm run db:migrate` (or `prisma migrate deploy` in CI/prod) after pulling.
+
 ## 2026-07-12 — tiptop-e0.4-locale-routing (E0.4)
 
 - **next-intl locale routing (plan D9).** `bs` default + `en`, path-prefixed (`/bs/*`, `/en/*`). Added `i18n/{routing,navigation,request}.ts`, `messages/{bs,en}.json` (scaffold namespaces: Nav/Common/Auth/Home — full string extraction is E11), and the next-intl plugin in `next.config.mjs`.
