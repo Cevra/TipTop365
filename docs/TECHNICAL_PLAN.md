@@ -505,7 +505,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 | E0.7 | Error/response envelope, zod validation helper, rate-limit middleware, `audit()` helper | M | E0.3 | ✅ 2026-07-12 |
 | E0.8 | Vitest + Playwright harness + Testcontainers Postgres for integration tests | M | E0.2 | ✅ 2026-07-12 |
 | E0.9 | Ops baseline (D21): Sentry client+server w/ release tags, Neon PITR verified + nightly logical dump to Bunny, staging environment + seed refresh, dead-man uptime checks on cron endpoints | M | E0.2 |
-| E0.10 | Design tokens lock + `app/components/ui/` primitives (§11.1 list) + dev-only `/styleguide` route rendering every component in every state (§20) | L | E0.4 |
+| E0.10 | Design tokens lock + `app/components/ui/` primitives (§11.1 list) + dev-only `/styleguide` route rendering every component in every state (§20) | L | E0.4 | ✅ 2026-07-12 |
 
 ### E1 — Data model & migrations (§10.2)
 | ID | Task | Size | Depends |
