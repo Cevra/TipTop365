@@ -11,6 +11,7 @@ import Image from 'next/image'
 import logoImage from '../../public/logo.svg'
 import { useAuth } from '@/contexts/AuthContext'
 import { logout } from '@/utils/auth'
+import { endSession } from '@/utils/session'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/firebaseConfig'
 
@@ -39,6 +40,7 @@ const NavBar = () => {
   const handleSignOut = async () => {
     try {
       await logout(auth)
+      await endSession()
       router.push('/')
     } catch (error) {
       console.error('Error signing out:', error)

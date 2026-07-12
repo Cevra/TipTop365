@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmail } from "@/utils/auth";
+import { startSession } from "@/utils/session";
 import { auth } from "@/firebaseConfig";
 import Image from "next/image";
 import logoImage from "../../public/logolight.svg";
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import Head from 'next/head';
 
 const Login = () => {
   const router = useRouter();
@@ -25,8 +24,10 @@ const Login = () => {
     }
 
     try {
-      await signInWithEmail(auth, email, password);
-      router.push("/");
+      const user = await signInWithEmail(auth, email, password);
+      await startSession(user);
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(next ?? "/");
     } catch (error: any) {
       let errorMessage = "Failed to log in";
       

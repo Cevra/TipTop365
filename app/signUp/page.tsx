@@ -6,6 +6,7 @@ import { auth } from "@/firebaseConfig";
 import Image from "next/image";
 import logoImage from '../../public/logo.svg'; // Adjust the path according to your project structure
 import { signUpWithEmail } from "@/utils/auth"; // Add this import
+import { startSession } from "@/utils/session";
 
 
 const SignUp = () => {
@@ -36,8 +37,9 @@ const SignUp = () => {
     }
 
     try {
-      await signUpWithEmail(auth, email, password);
-      router.push(`/profile/${auth.currentUser?.uid}`);
+      const user = await signUpWithEmail(auth, email, password);
+      await startSession(user);
+      router.push(`/profile/${user.uid}`);
     } catch (error: any) {
       // Enhanced error handling
       let errorMessage = "An error occurred during sign up";
