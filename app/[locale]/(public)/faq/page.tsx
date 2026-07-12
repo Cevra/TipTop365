@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react';
-import NavBar from '../components/NavBar';
-import Footer from '../components/Footer';
+import NavBar from '@/app/components/NavBar';
+import Footer from '@/app/components/Footer';
 
 const FAQAccordion = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);

@@ -10,7 +10,7 @@ import {
 } from "firebase/storage";
 import { collection, addDoc, updateDoc, doc, getDocs, getDoc, setDoc, query, where } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { ServiceProvider } from "@/lib/shared/types";
 import { useAuth } from "@/contexts/AuthContext";
 

@@ -34,6 +34,7 @@
     "firebase-admin": "^13.10.0",
     "flowbite": "^2.5.2",
     "next": "14.2.3",
+    "next-intl": "^3.26.5",
     "react": "^18",
     "react-dom": "^18",
     "react-time-picker": "^7.0.0",

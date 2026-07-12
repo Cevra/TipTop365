@@ -4,14 +4,15 @@ import { Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon, UserCircleIcon, BellIcon } from '@heroicons/react/24/outline'
 import { useState, Fragment, useEffect } from 'react'
 
-import { useRouter, usePathname } from 'next/navigation'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { useRouter, usePathname, Link } from '@/i18n/navigation'
 import { auth } from '@/firebaseConfig'
 import Image from 'next/image'
 import logoImage from '../../public/logo.svg'
 import { useAuth } from '@/contexts/AuthContext'
 import { logout } from '@/utils/auth'
 import { endSession } from '@/utils/session'
+import LocaleSwitcher from './LocaleSwitcher'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/firebaseConfig'
 
@@ -21,6 +22,7 @@ const NavBar = () => {
   const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations('Nav')
   const [profile, setProfile] = useState<any>(null)
 
   useEffect(() => {
@@ -100,7 +102,7 @@ const NavBar = () => {
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
-                Home
+                {t('home')}
               </Link>
               <Link
                 href="/usluge"
@@ -110,7 +112,7 @@ const NavBar = () => {
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
-                Usluge
+                {t('services')}
               </Link>
               <Link
                 href="/aboutUs"
@@ -120,7 +122,7 @@ const NavBar = () => {
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
-                O nama
+                {t('about')}
               </Link>
               <Link
                 href="/help"
@@ -130,7 +132,7 @@ const NavBar = () => {
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
-                Pomoć
+                {t('help')}
               </Link>
             </div>
 
@@ -152,12 +154,13 @@ const NavBar = () => {
 
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-x-4">
+              <LocaleSwitcher />
               {pathname !== '/' && (
                 <button
                   onClick={handleBecomeProvider}
                   className="relative inline-flex items-center gap-x-2 rounded-md bg-[#02404B] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
                 >
-                  Postani čistač
+                  {t('becomeProvider')}
                   <span className="text-lg">+</span>
                 </button>
               )}
@@ -201,14 +204,14 @@ const NavBar = () => {
                               onClick={handleProfileClick}
                               className={`block w-full text-left px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
                             >
-                              Profil
+                              {t('profile')}
                             </button>
                           )}
                         </Menu.Item>
                         <Menu.Item>
                           {({ active }) => (
                             <Link href="/settings" className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}>
-                              Postavke
+                              {t('settings')}
                             </Link>
                           )}
                         </Menu.Item>
@@ -218,7 +221,7 @@ const NavBar = () => {
                               onClick={handleSignOut}
                               className={`block w-full text-left px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
                             >
-                              Odjava
+                              {t('logout')}
                             </button>
                           )}
                         </Menu.Item>
@@ -256,7 +259,7 @@ const NavBar = () => {
               }`}
               onClick={() => setIsMenuOpen(false)}
             >
-              Home
+              {t('home')}
             </Link>
             <Link
               href="/usluge"
@@ -267,7 +270,7 @@ const NavBar = () => {
               }`}
               onClick={() => setIsMenuOpen(false)}
             >
-              Usluge
+              {t('services')}
             </Link>
             <Link
               href="/aboutUs"
@@ -278,7 +281,7 @@ const NavBar = () => {
               }`}
               onClick={() => setIsMenuOpen(false)}
             >
-              O nama
+              {t('about')}
             </Link>
             <Link
               href="/help"
@@ -289,19 +292,22 @@ const NavBar = () => {
               }`}
               onClick={() => setIsMenuOpen(false)}
             >
-              Pomoć
+              {t('help')}
             </Link>
           </div>
 
           {/* User Section */}
           <div className="border-t border-gray-200 pt-4 pb-3">
+            <div className="flex justify-center pb-3">
+              <LocaleSwitcher />
+            </div>
             {pathname !== '/' && (
               <div className="px-4 mb-3">
                 <button
                   onClick={handleBecomeProvider}
                   className="block w-full text-center rounded-md bg-[#02404B] px-3 py-2 text-base font-medium text-white hover:bg-opacity-90"
                 >
-                  Postani dio ekipe
+                  {t('becomeProvider')}
                   <span className="ml-1">+</span>
                 </button>
               </div>
@@ -330,20 +336,20 @@ const NavBar = () => {
                     onClick={handleProfileClick}
                     className="block w-full text-center rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                   >
-                    Profil
+                    {t('profile')}
                   </button>
                   <Link
                     href="/settings"
                     className="block w-full text-center rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Postavke
+                    {t('settings')}
                   </Link>
                   <button
                     onClick={handleSignOut}
                     className="block w-full text-center rounded-md px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                   >
-                    Odjava
+                    {t('logout')}
                   </button>
                 </div>
               </>
@@ -354,7 +360,7 @@ const NavBar = () => {
                   className="block w-full text-center rounded-md border border-[#02404B] px-3 py-2 text-base font-medium text-[#02404B] hover:bg-gray-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Prijavi se
+                  {t('login')}
                 </Link>
               </div>
             )}

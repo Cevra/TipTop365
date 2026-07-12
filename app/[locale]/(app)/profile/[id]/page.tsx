@@ -2,7 +2,7 @@
 
 import { useEffect, useState, ChangeEvent } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { doc, getDoc, updateDoc, setDoc, collection } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/firebaseConfig";

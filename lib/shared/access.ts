@@ -29,6 +29,20 @@ export function isProtectedPath(pathname: string): boolean {
 }
 
 /**
+ * Remove a leading locale segment (`/bs/book-service` → `/book-service`) so
+ * access checks are locale-agnostic. Returns `/` when the path is just the
+ * locale root (`/bs` → `/`). Pure; locales injected to avoid importing routing.
+ */
+export function stripLocalePrefix(pathname: string, locales: readonly string[]): string {
+  const segments = pathname.split('/');
+  if (segments.length >= 2 && locales.includes(segments[1])) {
+    const rest = '/' + segments.slice(2).join('/');
+    return rest === '/' ? '/' : rest.replace(/\/$/, '');
+  }
+  return pathname;
+}
+
+/**
  * Decides where an incoming request should go based only on the path and
  * whether a session cookie is present. Returns a redirect target, or null to
  * proceed. Kept pure so middleware behavior is fully unit-testable.

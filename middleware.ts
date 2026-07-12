@@ -1,24 +1,35 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { resolveAccess, SESSION_COOKIE } from '@/lib/shared/access';
+import createIntlMiddleware from 'next-intl/middleware';
+import { routing } from '@/i18n/routing';
+import { resolveAccess, stripLocalePrefix, SESSION_COOKIE } from '@/lib/shared/access';
 
-// Edge middleware does a cheap cookie-PRESENCE gate to redirect anonymous users
-// away from protected paths. It intentionally does NOT verify the cookie:
-// firebase-admin verification is Node-only. Cryptographic verification + role
-// enforcement happen in server components / route handlers via getSessionUser()
-// and requireRole() (plan D4). A forged-but-present cookie gets past middleware
-// and is then rejected server-side — never trusted for data access.
+const intlMiddleware = createIntlMiddleware(routing);
+
+// Two responsibilities, in order:
+//   1. Auth gate — redirect anonymous users off protected paths (cookie
+//      PRESENCE only; crypto verification is Node-only, done in server guards).
+//   2. Locale routing — delegate to next-intl (adds/normalizes the /bs|/en
+//      prefix). Runs for every non-excluded request so links stay localized.
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const pathWithoutLocale = stripLocalePrefix(pathname, routing.locales);
   const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
-  const redirectTo = resolveAccess(request.nextUrl.pathname, hasSession);
 
+  const redirectTo = resolveAccess(pathWithoutLocale, hasSession);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url));
+    // Preserve the locale the user was browsing in.
+    const segments = pathname.split('/');
+    const locale = routing.locales.includes(segments[1] as never)
+      ? segments[1]
+      : routing.defaultLocale;
+    return NextResponse.redirect(new URL(`/${locale}${redirectTo}`, request.url));
   }
-  return NextResponse.next();
+
+  return intlMiddleware(request);
 }
 
 export const config = {
-  // Run on everything except static assets and Next internals.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  // Skip API routes, Next internals, and files with an extension.
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 };

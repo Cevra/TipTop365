@@ -1,0 +1,37 @@
+{
+  "Nav": {
+    "home": "Početna",
+    "services": "Usluge",
+    "about": "O nama",
+    "help": "Pomoć",
+    "login": "Prijava",
+    "signup": "Registracija",
+    "profile": "Profil",
+    "settings": "Postavke",
+    "logout": "Odjava",
+    "becomeProvider": "Postani čistač"
+  },
+  "Common": {
+    "language": "Jezik",
+    "bosnian": "Bosanski",
+    "english": "Engleski",
+    "loading": "Učitavanje...",
+    "save": "Sačuvaj",
+    "cancel": "Odustani"
+  },
+  "Auth": {
+    "signInTitle": "Prijava",
+    "signUpTitle": "Kreiraj nalog",
+    "email": "Email",
+    "password": "Lozinka",
+    "confirmPassword": "Potvrdi lozinku",
+    "noAccount": "Nemaš nalog?",
+    "haveAccount": "Već imaš nalog?",
+    "signUpHere": "Registruj se ovdje",
+    "loginHere": "Prijavi se ovdje"
+  },
+  "Home": {
+    "metaTitle": "TipTop365 — Vaša platforma za čišćenje",
+    "metaDescription": "Povežite se s provjerenim čistačima. Rezervišite čišćenje online, s fiksnom cijenom."
+  }
+}

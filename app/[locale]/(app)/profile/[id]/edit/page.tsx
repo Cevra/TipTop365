@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, ChangeEvent } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { doc, getDoc, updateDoc, setDoc, collection } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/firebaseConfig";

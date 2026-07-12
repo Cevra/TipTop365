@@ -1,11 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, where, getDoc, doc } from "firebase/firestore";
 import { db } from '@/firebaseConfig';
-import HeroSection from './components/HeroSection';
-import ServiceGrid from './components/ServiceGrid';
+import HeroSection from '@/app/components/HeroSection';
+import ServiceGrid from '@/app/components/ServiceGrid';
 import { useAuth } from '@/contexts/AuthContext';
 import { ServiceProvider } from '@/lib/shared/types';
 
