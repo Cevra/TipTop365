@@ -1,6 +1,6 @@
 'use client';
 
-import { ServiceProvider } from '../models/ServiceProvider';
+import { ServiceProvider } from '@/lib/shared/types';
 import ServiceCard from './ServiceCard';
 import { useState } from 'react';
 
