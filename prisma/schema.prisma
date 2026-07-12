@@ -13,3 +13,15 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+// Admin-togglable feature flags (plan D12). One row per flag; `payload` carries
+// optional structured config. An env var (FLAG_<KEY>=true|false) overrides the
+// DB value at read time — see lib/server/featureFlags.ts.
+model FeatureFlag {
+  key       String   @id
+  enabled   Boolean  @default(false)
+  payload   Json?
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("feature_flags")
+}

@@ -500,7 +500,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 | E0.2 | Postgres (Neon EU) + Prisma init, CI pipeline (lint, typecheck, vitest, build) on GitHub Actions | M | — | ✅ 2026-07-12 |
 | E0.3 | `firebase-admin` + session-cookie auth (`/api/auth/session`), custom claims setter, rewrite `middleware.ts` (real gating), role guards | L | E0.2 | ✅ 2026-07-12 |
 | E0.4 | Route groups `(public)/(app)/(admin)` + next-intl scaffold (`bs`/`en`, locale routing), move existing pages in | L | E0.1 | ✅ 2026-07-12 |
-| E0.5 | `feature_flags` table + typed accessor + `ALLOW_UNVERIFIED_BOOKINGS`, `CASH_PAYMENTS_ENABLED` | S | E0.2 |
+| E0.5 | `feature_flags` table + typed accessor + `ALLOW_UNVERIFIED_BOOKINGS`, `CASH_PAYMENTS_ENABLED` | S | E0.2 | ✅ 2026-07-12 |
 | E0.6 | Decommission client Firestore data access (D3 v1.1): deny-all `firestore.rules` tombstone committed; `RealtimeChannel` polling adapter + `GET /api/bookings/:id/live` endpoint skeleton | M | E0.3 |
 | E0.7 | Error/response envelope, zod validation helper, rate-limit middleware, `audit()` helper | M | E0.3 |
 | E0.8 | Vitest + Playwright harness + Testcontainers Postgres for integration tests | M | E0.2 |
