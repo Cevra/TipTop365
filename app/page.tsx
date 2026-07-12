@@ -7,7 +7,7 @@ import { db } from '@/firebaseConfig';
 import HeroSection from './components/HeroSection';
 import ServiceGrid from './components/ServiceGrid';
 import { useAuth } from '@/contexts/AuthContext';
-import { ServiceProvider } from './models/ServiceProvider';
+import { ServiceProvider } from '@/lib/shared/types';
 
 export default function Home() {
   const router = useRouter();

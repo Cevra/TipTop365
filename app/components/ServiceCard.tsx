@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ServiceProvider } from '../models/ServiceProvider';
+import { ServiceProvider } from '@/lib/shared/types';
 
 interface ServiceCardProps {
   provider: ServiceProvider;

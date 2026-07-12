@@ -11,7 +11,7 @@ import {
 import { collection, addDoc, updateDoc, doc, getDocs, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { useRouter } from "next/navigation";
-import { ServiceProvider } from "../models/User";
+import { ServiceProvider } from "@/lib/shared/types";
 import { useAuth } from "@/contexts/AuthContext";
 
 type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';

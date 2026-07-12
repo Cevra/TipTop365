@@ -7,7 +7,7 @@ import { doc, getDoc, updateDoc, setDoc, collection } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/firebaseConfig";
 import { useAuth } from "@/contexts/AuthContext";
-import { Address } from "@/app/models/Address";
+import { Address } from "@/lib/shared/types";
 import { serviceIconMap } from "@/app/components/ServiceIcons";
 
 interface TimeSlot {
