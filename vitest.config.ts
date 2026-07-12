@@ -15,6 +15,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['tests/unit/**/*.spec.ts', 'tests/integration/**/*.spec.ts'],
+    // Unit tests only — no DB, no network. Runs in the main gate + PR CI.
+    // Integration tests (need Postgres) live in vitest.integration.config.ts.
+    include: ['tests/unit/**/*.spec.ts'],
   },
 });

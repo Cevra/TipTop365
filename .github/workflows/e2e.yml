@@ -1,0 +1,35 @@
+name: E2E
+
+# Playwright runs nightly and on demand — NOT on every PR (plan §19.1: E2E is a
+# gate/CI activity, not a per-edit loop). Real auth-dependent flows need the
+# secrets below; the locale-routing smoke suite only needs the app to boot.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY || 'ci-dummy' }}
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'ci-dummy.firebaseapp.com' }}
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ci-dummy' }}
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'ci-dummy.appspot.com' }}
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '0' }}
+      NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID || 'ci-dummy' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run test:e2e:install
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

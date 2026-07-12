@@ -2,6 +2,16 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-12 — tiptop-e0.8-test-harness (E0.8)
+
+- **Test harness across all three layers (plan D17/§14), documented in `docs/TESTING.md`.**
+- **Unit** (`vitest.config.ts`) narrowed to `tests/unit/**` — DB-free, stays the fast gate loop (63 tests).
+- **Integration** (`vitest.integration.config.ts`, `tests/integration/**`): Prisma↔Postgres via `DATABASE_URL`; `npm run test:integration`. First test round-trips `FeatureFlag` + asserts the seeded launch flags (verified live against Neon). CI gained an `integration` job (Postgres 16 service container + `prisma migrate deploy`).
+- **E2E** (Playwright, `tests/e2e/**`): `playwright.config.ts` boots a **production build** (no dev-compile flakiness); 4 locale-routing smoke tests, all green locally with Chromium. New `e2e.yml` workflow — nightly + on-demand only (not per-PR), uploads the HTML report.
+- Scripts: `test:integration`, `test:e2e`, `test:e2e:install`. `.gitignore` for `test-results`/`playwright-report`.
+- **Deviation logged:** plan named *Testcontainers*; no Docker on this machine + CI service containers are simpler, so integration uses a plain `DATABASE_URL` (Neon branch locally / service container in CI). Tests are agnostic — Testcontainers can slot in later unchanged.
+- **Out-of-scope finding:** next-intl `Accept-Language` auto-detection is ON — a real browser hits `/`→`/en`, header-less clients →`/bs`. Product decision to confirm (force `bs` default vs. detect); untouched here.
+
 ## 2026-07-12 — tiptop-e0.7-api-primitives (E0.7)
 
 - **API primitives (plan §10, §12.5, D13).** `zod` added.
