@@ -102,6 +102,16 @@ const config: Config = {
         error: '#A65D45',
         warning: '#C8976C',
         info: '#2C4F3E',
+        // Booking-status tokens (plan §20.3 — LOCKED). Used only by StatusBadge/
+        // StatusTimeline; never reuse decoratively. Keyed by lifecycle phase.
+        status: {
+          matching: '#B7791F', // amber
+          active: '#2B6CB0', // blue — accepted/on_my_way/in_progress
+          review: '#6B46C1', // violet — pending_completion
+          done: '#0B4B2D', // green — completed
+          alert: '#A65D45', // red — disputed/cancelled/refunded
+          idle: '#718096', // gray — expired/draft
+        },
         background: {
           DEFAULT: '#FFFFFF',
           paper: '#FCFBF8',

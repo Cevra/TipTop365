@@ -2,6 +2,16 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-12 — tiptop-e0.10-ui-primitives (E0.10)
+
+- **Design tokens locked (plan §20.3):** booking-status color tokens (`status.matching/active/review/done/alert/idle`) added to `tailwind.config.ts` — used only by StatusBadge/StatusTimeline.
+- **Money/date formatting (D5, §12.1):** `lib/shared/format.ts` — `formatKM` (integer fenings → "57,60 KM", dot-thousands, minus for debt), `formatKMFromDecimal`, `formatDateBs`/`formatDateTimeBs` (d.M.yyyy). Pure + tested (worked examples 57,60 / 51,84 KM).
+- **Booking status registry** `lib/shared/bookingStatus.ts` (status set + token map; the FSM in E3.4 reuses it).
+- **Component library** `app/components/ui/` (Tailwind + Headless UI only): Button (4 variants × states), Input/Textarea/Select (label/hint/error), StatusBadge, StatusTimeline, PriceBreakdown (Airbnb collapse/expand), RatingStars (display+interactive), TagPicker, CountdownPill, Stepper, EmptyState, Toast (provider+hook), ConfirmDialog (Headless UI), BottomTabBar, PhotoUploader (presentational — offline queue is E4.9), MapView (placeholder — real map E4.6). Barrel `index.ts`.
+- **`/styleguide`** dev-only route (`§20.2` living Figma) rendering every primitive in its states. **Gated in middleware** at runtime (prod → 404) — a page-level env check bakes into the static prerender and still serves; verified PROD /styleguide=404, dev=200.
+- Tests: +17 (format + bookingStatus), 77 total.
+- **Out-of-scope finding:** confirmed & fixed within task — the initial page-level `notFound()` guard did NOT gate a statically-prerendered route in prod (served 200); moved the gate to middleware.
+
 ## 2026-07-12 — tiptop-e0.8-test-harness (E0.8)
 
 - **Test harness across all three layers (plan D17/§14), documented in `docs/TESTING.md`.**

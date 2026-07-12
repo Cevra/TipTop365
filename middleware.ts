@@ -14,6 +14,13 @@ const intlMiddleware = createIntlMiddleware(routing);
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const pathWithoutLocale = stripLocalePrefix(pathname, routing.locales);
+
+  // Dev-only /styleguide (plan §20.2). Gated here at runtime because a page-level
+  // env check gets baked into the static prerender and still serves in prod.
+  if (pathWithoutLocale === '/styleguide' && process.env.NODE_ENV === 'production') {
+    return NextResponse.rewrite(new URL('/_not-found', request.url));
+  }
+
   const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
 
   const redirectTo = resolveAccess(pathWithoutLocale, hasSession);
