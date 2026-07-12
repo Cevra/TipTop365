@@ -2,6 +2,16 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-12 — tiptop-e0.4-locale-routing (E0.4)
+
+- **next-intl locale routing (plan D9).** `bs` default + `en`, path-prefixed (`/bs/*`, `/en/*`). Added `i18n/{routing,navigation,request}.ts`, `messages/{bs,en}.json` (scaffold namespaces: Nav/Common/Auth/Home — full string extraction is E11), and the next-intl plugin in `next.config.mjs`.
+- **Route groups**: every page moved under `app/[locale]/` into `(public)` (home, aboutUs, faq, usluge, login, signUp), `(app)` (book-service, become-provider, upload-image, profile), `(admin)` (admin stub, gated by `requireRole('admin')`). Root `app/layout.tsx` reduced to a passthrough; real `<html lang>` + providers + Nav/Footer now in `app/[locale]/layout.tsx` with `generateStaticParams` + `setRequestLocale`.
+- **`Profile/` → `profile/`** — normalized the folder casing, fixing the E0.3 finding where `router.push('/profile/...')` (lowercase) didn't match the `Profile` folder (breaks on Vercel/Linux).
+- **Middleware composed**: auth gate (cookie-presence) now strips the locale prefix before the access check and re-adds it on redirect (`/en/admin` → `/en/login?next=…`), then delegates to next-intl. New pure `stripLocalePrefix` helper in `lib/shared/access.ts` (unit-tested).
+- **Locale-aware navigation**: all internal `Link` + `useRouter`/`usePathname` swapped from `next/*` to `@/i18n/navigation` (keeps active locale on navigation); `useParams` stays on `next/navigation`. NavBar labels now use `useTranslations('Nav')`; added `LocaleSwitcher` (desktop + mobile).
+- Tests: +7 for `stripLocalePrefix` (30 total). Live-verified: `/`→`/bs`, `/bs` & `/en` render, locale-prefixed auth redirects, nav labels differ by locale (Usluge/Services).
+- **Follow-ups (out of scope, noted below):** page bodies still contain hardcoded bs/en strings (E11 does the full extraction); `/help` and `/settings` links still point to non-existent routes (pre-existing).
+
 ## 2026-07-12 — tiptop-e0.3-session-auth (E0.3)
 
 - **Server-side session auth (plan D4).** `firebase-admin` added with a **lazy singleton** (`lib/server/firebaseAdmin.ts`) that never initializes at import — `next build`/CI need no credentials; it reads `FIREBASE_SERVICE_ACCOUNT_JSON` (inline) or `FIREBASE_SERVICE_ACCOUNT_PATH` (file) only on first use.

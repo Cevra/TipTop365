@@ -1,0 +1,37 @@
+{
+  "Nav": {
+    "home": "Home",
+    "services": "Services",
+    "about": "About us",
+    "help": "Help",
+    "login": "Login",
+    "signup": "Sign up",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "becomeProvider": "Become a cleaner"
+  },
+  "Common": {
+    "language": "Language",
+    "bosnian": "Bosnian",
+    "english": "English",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "Auth": {
+    "signInTitle": "Sign In",
+    "signUpTitle": "Create an account",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "signUpHere": "Sign Up here",
+    "loginHere": "Login here"
+  },
+  "Home": {
+    "metaTitle": "TipTop365 — Your cleaning marketplace",
+    "metaDescription": "Connect with vetted cleaners. Book cleaning online with fixed, upfront pricing."
+  }
+}

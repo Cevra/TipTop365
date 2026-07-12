@@ -1,5 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { isProtectedPath, resolveAccess, SESSION_COOKIE } from '@/lib/shared/access';
+import {
+  isProtectedPath,
+  resolveAccess,
+  stripLocalePrefix,
+  SESSION_COOKIE,
+} from '@/lib/shared/access';
+
+const LOCALES = ['bs', 'en'] as const;
+
+describe('stripLocalePrefix', () => {
+  it.each([
+    ['/bs/book-service', '/book-service'],
+    ['/en/admin/payouts', '/admin/payouts'],
+    ['/bs', '/'],
+    ['/en', '/'],
+    ['/book-service', '/book-service'], // no locale prefix → unchanged
+    ['/', '/'],
+    ['/enterprise', '/enterprise'], // "en" must be a full segment, not a substring
+  ])('%s → %s', (input, expected) => {
+    expect(stripLocalePrefix(input, LOCALES)).toBe(expected);
+  });
+});
 
 describe('isProtectedPath', () => {
   it.each([

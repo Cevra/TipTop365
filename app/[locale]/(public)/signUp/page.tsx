@@ -1,53 +1,63 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signInWithEmail } from "@/utils/auth";
-import { startSession } from "@/utils/session";
+import { useRouter } from "@/i18n/navigation";
 import { auth } from "@/firebaseConfig";
 import Image from "next/image";
-import logoImage from "../../public/logolight.svg";
+import logoImage from '@/public/logo.svg'; // Adjust the path according to your project structure
+import { signUpWithEmail } from "@/utils/auth"; // Add this import
+import { startSession } from "@/utils/session";
 
-const Login = () => {
+
+const SignUp = () => {
   const router = useRouter();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
-
-    if (!email || !password) {
+    setError(null); // Clear previous errors
+    
+    // Enhanced validation
+    if (!email || !password || !passwordConfirmation) {
       setError("All fields are required");
       return;
     }
 
+    if (password !== passwordConfirmation) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
     try {
-      const user = await signInWithEmail(auth, email, password);
+      const user = await signUpWithEmail(auth, email, password);
       await startSession(user);
-      const next = new URLSearchParams(window.location.search).get("next");
-      router.push(next ?? "/");
+      router.push(`/profile/${user.uid}`);
     } catch (error: any) {
-      let errorMessage = "Failed to log in";
+      // Enhanced error handling
+      let errorMessage = "An error occurred during sign up";
       
       switch (error.code) {
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-          errorMessage = 'Invalid email or password';
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email is already registered';
           break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many failed attempts. Please try again later';
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
           break;
-        case 'auth/user-disabled':
-          errorMessage = 'This account has been disabled';
+        case 'auth/weak-password':
+          errorMessage = 'Password should be at least 6 characters';
           break;
-        default:
-          errorMessage = 'An error occurred during sign in';
       }
       
       setError(errorMessage);
-      console.error("Error signing in:", error);
+      console.error("Error creating user:", error);
     }
   };
 
@@ -55,21 +65,21 @@ const Login = () => {
     <section className="bg-gradient-to-r from-[#02404B] to-[#238B9E] dark:bg-gray-900">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
         <a href="#" className="flex items-center mb-2 text-2xl font-semibold text-gray-900 dark:text-white">
-          {/* Logo container */}
-          <div className="w-auto mx-auto flex items-center">
-            <Image
-              src={logoImage.src}
-              alt="Company Logo"
-              layout="fixed"
-              width={144}
-              height={64}
-            />
-          </div>
-        </a>
+          
+        <div  className=" w-auto mx-auto  flex items-center">
+        <Image
+          src={logoImage.src} // Use the imported logoImage object
+          alt="Company Logo"
+          layout="fixed" // Changed to fixed to prevent scaling
+          width={144} // Adjusted width to fit the navbar
+          height={64} // Adjusted height to fit the navbar
+          />
+      </div>
+          </a>
         <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
-              Sign In
+              Create an account
             </h1>
             <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
               <div>
@@ -98,17 +108,30 @@ const Login = () => {
                   required
                 />
               </div>
+              <div>
+                <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
+                <input
+                  type="password"
+                  name="confirm-password"
+                  id="confirm-password"
+                  value={passwordConfirmation}
+                  onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
               {error && <p className="text-red-500 mt-2">{error}</p>}
               <button
                 type="submit"
                 className="w-full text-white bg-gradient-to-r from-[#02404B] to-[#238B9E] hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
-                Sign In
+                Sign Up
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Don&apos;t have an account?{" "}
-                <a href="/signUp" className="font-medium text-primary-600 hover:underline dark:text-primary-500">
-                  Sign Up here
+                Already have an account?{" "}
+                <a href="/login" className="font-medium text-primary-600 hover:underline dark:text-primary-500">
+                  Login here
                 </a>
               </p>
             </form>
@@ -119,4 +142,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignUp;
