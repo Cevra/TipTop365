@@ -6,8 +6,10 @@ export async function middleware(request: NextRequest) {
   const user = auth.currentUser;
 
   // Protect provider routes
+  // TODO(E0.3): client-side auth.currentUser is always null in Edge middleware —
+  // replace with __session cookie verification + role claim (plan D4).
   if (request.nextUrl.pathname.startsWith('/provider-dashboard')) {
-    if (!user || user.role !== 'provider') {
+    if (!user) {
       return NextResponse.redirect(new URL('/become-provider', request.url));
     }
   }

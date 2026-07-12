@@ -232,6 +232,7 @@ const NavBar = () => {
 
       {/* Mobile menu panel */}
       <Transition
+        as="div"
         show={isMenuOpen}
         enter="transition duration-200 ease-out"
         enterFrom="transform scale-95 opacity-0"
