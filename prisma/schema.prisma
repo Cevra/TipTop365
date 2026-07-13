@@ -112,6 +112,14 @@ model User {
   chatMessages          ChatMessage[]
   bookingEvents         BookingEvent[]
   executedPayoutRuns    PayoutRun[]
+  consents              Consent[]
+  deletionRequests      DeletionRequest[]
+  photosUploaded        Photo[]
+  disputesOpened        Dispute[]                 @relation("DisputeOpener")
+  disputesResolved      Dispute[]                 @relation("DisputeResolver")
+  notifications         Notification[]
+  promoRedemptions      PromoRedemption[]
+  auditEntries          AuditLog[]
 
   @@map("users")
 }
@@ -165,6 +173,7 @@ model CleanerProfile {
   priceAdjustmentsRequested PriceAdjustment[]
   preferredInPlans          RecurringPlan[]
   payouts                   Payout[]
+  dayLimitEntries           DayLimitEntry[]
 
   @@index([cityId, active, tier])
   @@map("cleaner_profiles")
@@ -484,6 +493,13 @@ model Booking {
   chatMessages     ChatMessage[]
   ledgerEntries    LedgerEntry[]
   payments         Payment[]
+  contract         Contract?
+  dayLimitEntries  DayLimitEntry[]
+  photos           Photo[]
+  reviews          Review[]
+  dispute          Dispute?
+  notifications    Notification[]
+  promoRedemptions PromoRedemption[]
 
   @@index([customerId])
   @@index([cleanerId])
@@ -791,4 +807,321 @@ model Payout {
   @@unique([payoutRunId, cleanerId])
   @@index([cleanerId])
   @@map("payouts")
+}
+
+// ---------------------------------------------------------------------------
+// Legal/media/ops block (E1.5, plan §4/§8/§9). Schema only — consumers land
+// later: contracts/day-limits E7, retention job E12.1, reviews/disputes E8,
+// notification dispatcher E10, audit sink E9, promos E11.4, analytics E11.2.
+// ---------------------------------------------------------------------------
+
+// Separate from LegalRegime on purpose: §4 lists `obrt_selfbill` here (a
+// template kind — the platform self-bills registered obrt cleaners) where the
+// residence enum has `obrt`. Template `key` stays a plain string (D19:
+// payroll-mandate/employment templates later are new keys, not a migration).
+enum ContractTemplateRegime {
+  fbih
+  fbih_student
+  rs
+  brcko
+  obrt_selfbill
+}
+
+enum ContractStatus {
+  draft
+  active
+  void
+}
+
+enum ConsentKind {
+  tos
+  privacy
+  photos
+  marketing
+}
+
+enum PhotoKind {
+  pre_job
+  before
+  after
+  damage
+}
+
+enum ReviewDirection {
+  customer_to_cleaner
+  cleaner_to_customer
+}
+
+enum DisputeStatus {
+  open
+  investigating
+  resolved_refund
+  resolved_release
+  resolved_partial
+}
+
+enum NotificationChannel {
+  push
+  email
+  sms
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  failed
+}
+
+enum PromoType {
+  pct
+  fixed
+}
+
+// Lawyer-owned content (§8): every template renders with the "NACRT — zahtijeva
+// pravnu reviziju / DRAFT" watermark until an admin flips lawyerApproved.
+model ContractTemplate {
+  id             String                 @id @default(cuid())
+  key            String
+  legalRegime    ContractTemplateRegime @map("legal_regime")
+  // Plain string ("bs"/"en") — same reasoning as users.locale.
+  lang           String
+  version        Int
+  htmlBody       String                 @map("html_body")
+  lawyerApproved Boolean                @default(false) @map("lawyer_approved")
+  active         Boolean                @default(true)
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+
+  @@unique([key, legalRegime, lang, version])
+  @@map("contract_templates")
+}
+
+model Contract {
+  id                 String         @id @default(cuid())
+  bookingId          String         @unique @map("booking_id")
+  // Snapshot int, same pattern as bookings.pricing_config_version — templates
+  // are admin-editable; the PDF + sha256 are the artifact of record.
+  templateVersion    Int            @map("template_version")
+  pdfUrl             String         @map("pdf_url")
+  sha256             String
+  customerAcceptedAt DateTime?      @map("customer_accepted_at")
+  customerAcceptedIp String?        @map("customer_accepted_ip")
+  cleanerAcceptedAt  DateTime?      @map("cleaner_accepted_at")
+  cleanerAcceptedIp  String?        @map("cleaner_accepted_ip")
+  status             ContractStatus @default(draft)
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("contracts")
+}
+
+// One row per engaged day (§8.3) — a multi-visit day counts once, hence the
+// composite unique. `year` is denormalized for fast per-year usedDays counts.
+model DayLimitEntry {
+  id          String      @id @default(cuid())
+  cleanerId   String      @map("cleaner_id")
+  bookingId   String      @map("booking_id")
+  workDate    DateTime    @map("work_date") @db.Date
+  legalRegime LegalRegime @map("legal_regime")
+  year        Int
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  cleaner CleanerProfile @relation(fields: [cleanerId], references: [id])
+  booking Booking        @relation(fields: [bookingId], references: [id])
+
+  @@unique([cleanerId, workDate, year])
+  @@index([cleanerId, year])
+  @@map("day_limit_entries")
+}
+
+// Versioned consent records (§8.5, BiH ZZLP).
+model Consent {
+  id        String      @id @default(cuid())
+  userId    String      @map("user_id")
+  kind      ConsentKind
+  // Policy versions are date/semver-ish strings, not integers.
+  version   String
+  grantedAt DateTime    @map("granted_at")
+  ip        String?
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, kind])
+  @@map("consents")
+}
+
+model DeletionRequest {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  // Vocabulary owned by E12.2's right-to-delete workflow — same plain-string
+  // precedent as payments.status.
+  status      String    @default("open")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("deletion_requests")
+}
+
+// Binary lives in the private Bunny zone under storageKey; the row is
+// tombstoned (deletedAt/deleteReason) when the retention job hard-deletes the
+// binary (§9). encKeyWrapped only for pre_job photos (AES-256-GCM per booking).
+model Photo {
+  id            String    @id @default(cuid())
+  bookingId     String    @map("booking_id")
+  kind          PhotoKind
+  roomLabel     String?   @map("room_label")
+  storageKey    String    @map("storage_key")
+  encKeyWrapped String?   @map("enc_key_wrapped")
+  uploadedById  String    @map("uploaded_by_id")
+  deleteAfter   DateTime  @map("delete_after")
+  deletedAt     DateTime? @map("deleted_at")
+  deleteReason  String?   @map("delete_reason")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  uploadedBy User    @relation(fields: [uploadedById], references: [id])
+
+  // The hourly retention job's exact scan: delete_after < now() AND deleted_at IS NULL.
+  @@index([deleteAfter, deletedAt])
+  @@index([bookingId])
+  @@map("photos")
+}
+
+model Review {
+  id        String          @id @default(cuid())
+  bookingId String          @map("booking_id")
+  direction ReviewDirection
+  // 1–5, app-enforced (Prisma DSL has no check constraints).
+  stars     Int
+  tags      String[]        @default([])
+  body      String?
+  // Double-blind: hidden until both sides review or the reveal window ends (E8.1).
+  visible   Boolean         @default(false)
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@unique([bookingId, direction])
+  @@map("reviews")
+}
+
+model Dispute {
+  id                String        @id @default(cuid())
+  bookingId         String        @unique @map("booking_id")
+  openedById        String        @map("opened_by_id")
+  reason            String
+  status            DisputeStatus @default(open)
+  resolutionAmountF Int?          @map("resolution_amount_f")
+  resolvedById      String?       @map("resolved_by_id")
+  notes             String?
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  openedBy   User    @relation("DisputeOpener", fields: [openedById], references: [id])
+  resolvedBy User?   @relation("DisputeResolver", fields: [resolvedById], references: [id])
+
+  @@index([status])
+  @@map("disputes")
+}
+
+// Outbox (D10): rows are written in the same tx as the domain change; the
+// dispatcher (E10) scans status=pending and sends via FCM/email/SMS adapters.
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String              @map("user_id")
+  bookingId String?             @map("booking_id")
+  eventKey  String              @map("event_key")
+  channel   NotificationChannel
+  payload   Json
+  status    NotificationStatus  @default(pending)
+  sentAt    DateTime?           @map("sent_at")
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id])
+  booking Booking? @relation(fields: [bookingId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@map("notifications")
+}
+
+model PromoCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  type           PromoType
+  // pct → percentage points; fixed → integer fenings (D5).
+  value          Int
+  validFrom      DateTime? @map("valid_from")
+  validUntil     DateTime? @map("valid_until")
+  maxRedemptions Int?      @map("max_redemptions")
+  maxPerUser     Int?      @map("max_per_user")
+  active         Boolean   @default(true)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  redemptions PromoRedemption[]
+
+  @@map("promo_codes")
+}
+
+model PromoRedemption {
+  id          String   @id @default(cuid())
+  promoCodeId String   @map("promo_code_id")
+  userId      String   @map("user_id")
+  bookingId   String   @map("booking_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  promoCode PromoCode @relation(fields: [promoCodeId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  booking   Booking   @relation(fields: [bookingId], references: [id])
+
+  // One use of a given code per booking; per-user limits are E11.4 logic.
+  @@unique([promoCodeId, bookingId])
+  @@index([userId])
+  @@map("promo_redemptions")
+}
+
+// Mirrors AuditEntry in lib/server/audit.ts field-for-field; E9 registers the
+// Prisma sink via setAuditSink. Append-only.
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?  @map("actor_user_id")
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id")
+  before      Json?
+  after       Json?
+  ip          String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@map("audit_log")
+}
+
+// Funnel events (§9 cross-cutting). userId is a PLAIN STRING, no FK: events
+// must survive user deletion/anonymization (§8.5) and funnel writes must never
+// fail on FK races. Append-only.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  sessionId String   @map("session_id")
+  userId    String?  @map("user_id")
+  event     String
+  props     Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([event, createdAt])
+  @@map("analytics_events")
 }

@@ -2,6 +2,15 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-14 — tiptop-e1.5-legal-media-ops (E1.5)
+
+- **Legal/media/ops block (plan §4/§8/§9):** 13 models — `contract_templates`, `contracts`, `day_limit_entries`, `consents`, `deletion_requests`, `photos`, `reviews`, `disputes`, `notifications`, `promo_codes`, `promo_redemptions`, `audit_log`, `analytics_events` — + 9 enums. Migration `20260714_legal_media_ops_block` (applied to Neon). **Completes the §4 inventory except `location_pings` (E4.6).**
+- `ContractTemplateRegime` is a separate enum from `LegalRegime` (`obrt_selfbill` is a template kind, not a residence regime); template `key` plain string per D19. `contracts.booking_id` unique (one per booking), `template_version` snapshot int (same pattern as `pricing_config_version`), `lawyer_approved` default false = the DRAFT-watermark gate.
+- `day_limit_entries` unique `(cleaner_id, work_date, year)` — a multi-visit day counts once (§8.3); `year` denormalized for fast usedDays counts; FK to `cleaner_profiles` per the §4 ERD.
+- `photos` carry the §9 retention machinery (`delete_after`, tombstone `deleted_at`/`delete_reason`, `enc_key_wrapped` for pre_job) with an index matching the hourly job's exact scan. `reviews` unique per `(booking, direction)`, `visible` default false (double-blind). `disputes` one per booking. `notifications` = the D10 outbox (`pending` default + `[status, createdAt]` dispatcher index).
+- `audit_log` mirrors `AuditEntry` from `lib/server/audit.ts` field-for-field (E9 registers the sink); `analytics_events.user_id` is a **plain string, no FK** — events survive user deletion/anonymization (§8.5). `deletion_requests.status` plain string (E12.2 owns the vocabulary, same precedent as `payments.status`).
+- Tests: +6 integration (`legalMediaOps.db.spec.ts` — template versioning, one-contract-per-booking + e-acceptance, day-limit uniqueness, photo retention scan + tombstone, review direction uniqueness + dispute uniqueness, outbox defaults, promo redemption uniqueness, audit-record shape mapping, consent/deletion/analytics). 94 unit / 23 integration total.
+
 ## 2026-07-13 — tiptop-e1.4-money-block (E1.4)
 
 - **Money block (plan §4/§7):** `wallet_accounts`, `ledger_entries` (append-only, no `updated_at` — corrections are new `adjustment` postings), `payments`, `payout_runs`, `payouts` + 5 enums. Migration `20260713155847_money_block` (applied to Neon). Schema only — the posting engine with balanced-tx/idempotent-replay behavior is E5.1.
