@@ -21,11 +21,12 @@
     "db:ping": "dotenv -e .env.local -- node scripts/db-ping.mjs",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "db:studio": "dotenv -e .env.local -- prisma studio",
+    "db:seed": "dotenv -e .env.local -- prisma db seed",
     "db:seed:flags": "dotenv -e .env.local -- node scripts/seed-flags.mjs",
     "db:backfill:identity": "dotenv -e .env.local -- node --import tsx scripts/backfill-identity.mjs"
   },
   "prisma": {
-    "seed": "node scripts/seed-flags.mjs"
+    "seed": "node --import tsx prisma/seed.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",
@@ -37,12 +38,11 @@
     "@prisma/client": "^6.19.3",
     "@sentry/nextjs": "^8.55.2",
     "@types/styled-components": "^5.1.34",
-    "bunnycdn-storage": "^1.1.0",
     "dayjs": "^1.11.11",
     "firebase": "^10.12.2",
     "firebase-admin": "^13.10.0",
     "flowbite": "^2.5.2",
-    "next": "14.2.3",
+    "next": "14.2.35",
     "next-intl": "^3.26.5",
     "react": "^18",
     "react-dom": "^18",
@@ -59,7 +59,7 @@
     "@typescript-eslint/parser": "^8.31.0",
     "dotenv-cli": "^8.0.0",
     "eslint": "^8",
-    "eslint-config-next": "14.2.3",
+    "eslint-config-next": "14.2.35",
     "eslint-config-prettier": "^10.1.2",
     "postcss": "^8",
     "prisma": "^6.19.3",
