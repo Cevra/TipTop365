@@ -24,6 +24,9 @@
     "db:seed:flags": "dotenv -e .env.local -- node scripts/seed-flags.mjs",
     "db:backfill:identity": "dotenv -e .env.local -- node --import tsx scripts/backfill-identity.mjs"
   },
+  "prisma": {
+    "seed": "node scripts/seed-flags.mjs"
+  },
   "dependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",

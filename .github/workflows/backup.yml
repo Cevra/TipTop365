@@ -24,4 +24,12 @@ jobs:
           node-version: 20
       # ubuntu-latest ships postgresql-client (pg_dump). Verify + pin major if needed.
       - run: pg_dump --version
-      - run: node scripts/db-dump.mjs "$(date -u +%Y%m%dT%H%M%SZ)"
+      # Skip (green, with a visible notice) until the DIRECT_URL secret is
+      # configured — see docs/OPS.md "needs your accounts". Without this guard
+      # the nightly run fails every night on a machine that can't dump anything.
+      - run: |
+          if [ -z "$DIRECT_URL" ]; then
+            echo "::notice::DIRECT_URL secret not configured — backup skipped (see docs/OPS.md)."
+            exit 0
+          fi
+          node scripts/db-dump.mjs "$(date -u +%Y%m%dT%H%M%SZ)"
