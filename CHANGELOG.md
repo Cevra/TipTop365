@@ -2,6 +2,14 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-13 — tiptop-e1.4-money-block (E1.4)
+
+- **Money block (plan §4/§7):** `wallet_accounts`, `ledger_entries` (append-only, no `updated_at` — corrections are new `adjustment` postings), `payments`, `payout_runs`, `payouts` + 5 enums. Migration `20260713155847_money_block` (applied to Neon). Schema only — the posting engine with balanced-tx/idempotent-replay behavior is E5.1.
+- **Decision-log conflict resolved in D19's favor:** §4 sketches `wallet_accounts.owner_type` as an enum, but binding D19 says ledger account types are **generic strings** (so payroll_service/employed bolt on without money-table migrations) — and §7's authoritative account names (`platform_cash`, `platform_revenue`, `customer_escrow`, `cleaner_payable`, `cleaner_receivable`) don't match §4's enum values anyway. Implemented as `String` with §7's vocabulary documented in the schema.
+- `ledger_entries.idempotency_key` unique at the DB level (webhook-replay safety, §7); `@@unique(owner_type, owner_id)` on wallets (⚠️ Postgres NULL-distinct: singleton platform accounts are bootstrap-created in E5.1/E1.6, not concurrent-upserted — noted in schema). `Σdebit=Σcredit per tx_id` and `amount_f > 0` cannot be expressed in Prisma DSL and hand-editing migration SQL is forbidden (CLAUDE.md) — E5.1's module + CI invariant test own them, per the plan.
+- `payments.status` is a plain string (provider-specific vocabulary, owned by the D6 interface in E3.5); `payments.booking_id` nullable (top-ups have no booking); Prisma enum named `PaymentProviderKind` to avoid colliding with the future `PaymentProvider` TS interface. `payouts` composite-unique per (run, cleaner); `payout_runs.week_label` unique; `iban_snapshot` frozen at run-prep time.
+- Tests: +5 integration (`money.db.spec.ts` — §7 capture posting shape, idempotency-key replay rejected, payable/receivable coexistence + duplicate-pair rejection, booking-less topup payment, payout run with per-cleaner uniqueness and linked payout posting). 94 unit / 17 integration total.
+
 ## 2026-07-13 — tiptop-e1.3-booking-block (E1.3)
 
 - **Booking block (plan §4/§5):** 7 models — `bookings`, `booking_addons`, `booking_events`, `booking_offers`, `recurring_plans`, `price_adjustments`, `chat_messages` — + 7 enums. Migration `20260713154736_booking_block` (applied to Neon). Schema only — the FSM transition table (E3.4), pricing math (E2.1), and matching logic (E3.3/E3.6) are separate tasks.
