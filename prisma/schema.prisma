@@ -111,6 +111,7 @@ model User {
   recurringPlans        RecurringPlan[]
   chatMessages          ChatMessage[]
   bookingEvents         BookingEvent[]
+  executedPayoutRuns    PayoutRun[]
 
   @@map("users")
 }
@@ -163,6 +164,7 @@ model CleanerProfile {
   bookingOffers             BookingOffer[]
   priceAdjustmentsRequested PriceAdjustment[]
   preferredInPlans          RecurringPlan[]
+  payouts                   Payout[]
 
   @@index([cityId, active, tier])
   @@map("cleaner_profiles")
@@ -480,6 +482,8 @@ model Booking {
   offers           BookingOffer[]
   priceAdjustments PriceAdjustment[]
   chatMessages     ChatMessage[]
+  ledgerEntries    LedgerEntry[]
+  payments         Payment[]
 
   @@index([customerId])
   @@index([cleanerId])
@@ -607,4 +611,184 @@ model ChatMessage {
 
   @@index([bookingId, createdAt])
   @@map("chat_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Money block (E1.4, plan §4/§7). Schema only — the posting engine with its
+// balanced-tx (Σdebit = Σcredit per tx_id) and amount_f > 0 invariants is
+// E5.1 (`lib/domain/ledger/`); Prisma's DSL can't express them, and D18/CLAUDE
+// forbids hand-editing migration SQL, so the module + CI invariant test own
+// them per the plan.
+// ---------------------------------------------------------------------------
+
+// §4 sketches owner_type as an enum, but binding D19 says "ledger account
+// types are generic strings" (so payroll_service/employed models bolt on
+// without a money-table migration), and §7's authoritative account vocabulary
+// differs from §4's enum values anyway. D19 + §7 win: plain string. Known
+// values (§7): platform_cash, platform_revenue, customer_escrow,
+// cleaner_payable, cleaner_receivable.
+model WalletAccount {
+  id        String  @id @default(cuid())
+  ownerType String  @map("owner_type")
+  // Cleaner-scoped accounts carry the cleaner_profiles id; platform-level
+  // accounts (platform_cash, platform_revenue, customer_escrow) leave it null.
+  // Postgres treats NULLs as distinct in unique constraints, so singleton
+  // platform accounts are created once by the E5.1 bootstrap / E1.6 seed,
+  // not concurrent-upserted.
+  ownerId   String? @map("owner_id")
+  // Materialized balance — updated in the same tx as postings (E5.1).
+  balanceF  Int     @default(0) @map("balance_f")
+  blocked   Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  debitEntries  LedgerEntry[] @relation("DebitAccount")
+  creditEntries LedgerEntry[] @relation("CreditAccount")
+
+  @@unique([ownerType, ownerId])
+  @@map("wallet_accounts")
+}
+
+enum LedgerEntryKind {
+  charge
+  capture
+  release
+  fee
+  refund
+  cash_commission
+  topup
+  payout
+  adjustment
+  dispute_hold
+  dispute_release
+}
+
+// Append-only double-entry postings (§7). No updatedAt on purpose — rows are
+// never updated; corrections are new postings (kind = adjustment).
+model LedgerEntry {
+  id              String          @id @default(cuid())
+  // Groups the rows of one balanced transaction (Σdebit = Σcredit per txId).
+  txId            String          @map("tx_id")
+  bookingId       String?         @map("booking_id")
+  payoutId        String?         @map("payout_id")
+  debitAccountId  String          @map("debit_account_id")
+  creditAccountId String          @map("credit_account_id")
+  // Always positive — direction is carried by debit/credit, never by sign.
+  // Enforced by the E5.1 posting engine (+ CI invariant test), not the DB.
+  amountF         Int             @map("amount_f")
+  kind            LedgerEntryKind
+  // e.g. `capture:<paymentId>`, `release:<bookingId>` — replays are no-ops (§7).
+  idempotencyKey  String          @unique @map("idempotency_key")
+  memo            String?
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  booking       Booking?      @relation(fields: [bookingId], references: [id])
+  payout        Payout?       @relation(fields: [payoutId], references: [id])
+  debitAccount  WalletAccount @relation("DebitAccount", fields: [debitAccountId], references: [id])
+  creditAccount WalletAccount @relation("CreditAccount", fields: [creditAccountId], references: [id])
+
+  @@index([txId])
+  @@index([bookingId])
+  @@index([debitAccountId])
+  @@index([creditAccountId])
+  @@map("ledger_entries")
+}
+
+// Named *Kind to avoid colliding with the D6 `PaymentProvider` TS interface
+// (lib/server/payments, E3.5) — both would otherwise be importable as
+// `PaymentProvider` from their packages.
+enum PaymentProviderKind {
+  mock
+  monri
+  wspay
+}
+
+enum PaymentKind {
+  auth
+  capture
+  refund
+  void
+  topup
+}
+
+model Payment {
+  id             String              @id @default(cuid())
+  // Nullable: kind = topup (cash-debt top-up, §7) has no booking.
+  bookingId      String?             @map("booking_id")
+  provider       PaymentProviderKind
+  providerRef    String?             @map("provider_ref")
+  kind           PaymentKind
+  // Provider-specific vocabulary — the D6 PaymentProvider interface (E3.5)
+  // owns the value set; plain string so a PSP status never needs a migration.
+  status         String
+  amountF        Int                 @map("amount_f")
+  // Tokenized card for one-click repeat (§6) — never a PAN.
+  cardToken      String?             @map("card_token")
+  threedsStatus  String?             @map("threeds_status")
+  // Raw webhook payload as received — audit/debug trail for E6.5 replay tests.
+  webhookPayload Json?               @map("webhook_payload")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  booking Booking? @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
+  @@index([provider, providerRef])
+  @@map("payments")
+}
+
+enum PayoutRunStatus {
+  draft
+  exported
+  paid
+}
+
+enum PayoutStatus {
+  pending
+  paid
+  failed
+}
+
+// Weekly payout run (D7): prep job builds it, admin exports the bank CSV,
+// marks it paid after the manual bank upload → payout postings written (E5.5).
+model PayoutRun {
+  id           String          @id @default(cuid())
+  weekLabel    String          @unique @map("week_label")
+  status       PayoutRunStatus @default(draft)
+  bankFileUrl  String?         @map("bank_file_url")
+  totalsF      Int             @default(0) @map("totals_f")
+  executedById String?         @map("executed_by_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  executedBy User?    @relation(fields: [executedById], references: [id])
+  payouts    Payout[]
+
+  @@map("payout_runs")
+}
+
+model Payout {
+  id           String       @id @default(cuid())
+  payoutRunId  String       @map("payout_run_id")
+  cleanerId    String       @map("cleaner_id")
+  amountF      Int          @map("amount_f")
+  // IBAN copied from cleaner_legal_profiles at run-prep time — the bank file
+  // must reflect what was actually exported even if the profile changes later.
+  ibanSnapshot String       @map("iban_snapshot")
+  status       PayoutStatus @default(pending)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  payoutRun     PayoutRun      @relation(fields: [payoutRunId], references: [id])
+  cleaner       CleanerProfile @relation(fields: [cleanerId], references: [id])
+  ledgerEntries LedgerEntry[]
+
+  // One payout per cleaner per run — §7: "for each cleaner with payable > 0 → a payouts row".
+  @@unique([payoutRunId, cleanerId])
+  @@index([cleanerId])
+  @@map("payouts")
 }
