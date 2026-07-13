@@ -2,6 +2,7 @@ import 'server-only';
 import { readFileSync } from 'node:fs';
 import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
 import { getAuth, type Auth } from 'firebase-admin/auth';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
 // Lazy singleton: never initialized at import time, so `next build` (CI) and the
 // Edge runtime don't need real credentials. First actual call to adminAuth()
@@ -33,4 +34,11 @@ function adminApp(): App {
 
 export function adminAuth(): Auth {
   return getAuth(adminApp());
+}
+
+// Read-only access to the legacy Firestore collections (users/providers/address)
+// for the E1 backfill. New code must not write here — Postgres is the system of
+// record (D3 v1.1); firestore.rules is a deny-all tombstone for clients.
+export function adminFirestore(): Firestore {
+  return getFirestore(adminApp());
 }

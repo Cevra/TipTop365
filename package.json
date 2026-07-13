@@ -21,7 +21,8 @@
     "db:ping": "dotenv -e .env.local -- node scripts/db-ping.mjs",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "db:studio": "dotenv -e .env.local -- prisma studio",
-    "db:seed:flags": "dotenv -e .env.local -- node scripts/seed-flags.mjs"
+    "db:seed:flags": "dotenv -e .env.local -- node scripts/seed-flags.mjs",
+    "db:backfill:identity": "dotenv -e .env.local -- node --import tsx scripts/backfill-identity.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",
@@ -60,6 +61,7 @@
     "postcss": "^8",
     "prisma": "^6.19.3",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.23.1",
     "typescript": "^5",
     "vitest": "^3.2.7"
   }

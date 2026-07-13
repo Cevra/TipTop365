@@ -2,6 +2,15 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-13 — tiptop-e1.1-identity-model (E1.1)
+
+- **Identity block (plan §4):** 6 models — `users`, `cities`, `cleaner_profiles`, `cleaner_legal_profiles`, `verification_applications`, `properties` — + 8 enums, migration `20260713145632_identity_block` (applied to Neon). Money integer fenings (`hourly_rate_f`, D5); `engagement_model` enum default `marketplace` (D19 seam, values only); `locale` is a plain string mirroring `i18n/routing.ts` (no enum). `cleaner_legal_profiles.cleaner_id` FKs `users` directly per the §4 ERD.
+- **Deferred by design:** `cleaner_services` join lands in E1.2 with `service_types` (would be a dangling FK today). `jmbg_encrypted` is an opaque column — AES-GCM writer is E7. `cleaner_legal_profiles`/`verification_applications` start empty (no legacy source; populated by E7.4/E9.3).
+- **Firestore backfill:** `adminFirestore()` added to the lazy firebase-admin singleton (reads only — D3 tombstone unaffected). Pure mappers in `lib/server/backfill/mapIdentity.ts` (role `provider`→`cleaner`, KM→fenings, city slugify incl. č/ć/đ, doc→create-input shapes); I/O adapter `scripts/backfill-identity.mjs` (`npm run db:backfill:identity`, **dry-run by default**, `-- --commit` to write, idempotent upserts that never clobber app-owned rows).
+- **Dry run reviewed against live Firestore:** 5 users → 4 mapped (1 skipped: no email), 22 provider docs → 2 profiles (matching by in-doc `uid` field rescued 18 `addDoc`-era duplicates; 2 true orphans without a `users` doc reported, not migrated), 3 addresses → 2 properties, cities Sarajevo + Čapljina. `--commit` not yet executed — operator decision.
+- Dev deps: `tsx` (runs the TS mappers from the Node script). Tests: +17 unit (mappers) = 94, +3 integration (identity graph round-trip, unique constraints, referral self-relation).
+- ⚠️ `prisma migrate reset` gate check not run this session (permission-gated destructive op) — run manually in review; formally due with full G1 at E1.6.
+
 ## 2026-07-12 — tiptop-e0.9-ops-baseline (E0.9)
 
 - **Ops baseline (plan D21), documented in `docs/OPS.md` (code vs. account-needed matrix).**
