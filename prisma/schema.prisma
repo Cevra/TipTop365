@@ -2,7 +2,7 @@
 // DATABASE_URL  = pooled connection (app runtime)
 // DIRECT_URL    = unpooled connection (migrations)
 // Prisma CLI reads .env, not .env.local — npm scripts wrap with `dotenv -e .env.local`.
-// Domain models land in E1 (plan §4); this file intentionally has none yet.
+// Domain models land block-by-block through E1 (plan §4). E1.1 = identity block.
 
 generator client {
   provider = "prisma-client-js"
@@ -24,4 +24,210 @@ model FeatureFlag {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("feature_flags")
+}
+
+// ---------------------------------------------------------------------------
+// Identity block (E1.1, plan §4). Money = integer fenings (D5): *_f columns.
+// Locale is a plain string (mirrors i18n/routing.ts union), not a DB enum.
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  customer
+  cleaner
+  admin
+}
+
+enum UserStatus {
+  active
+  suspended
+  deleted
+}
+
+enum CleanerTier {
+  registered
+  verified
+}
+
+// D19 seam: only `marketplace` is implemented; the other values exist so the
+// Batmaid-trio growth path (§21) never needs a money-table migration.
+enum EngagementModel {
+  marketplace
+  payroll_service
+  employed
+}
+
+enum LegalRegime {
+  fbih
+  fbih_student
+  rs
+  brcko
+  obrt
+}
+
+enum VerificationStatus {
+  applied
+  interview_scheduled
+  checklist
+  approved
+  rejected
+}
+
+enum InterviewMode {
+  video
+  in_person
+}
+
+enum PropertyType {
+  apartment
+  house
+  office
+  vacation_rental
+}
+
+model User {
+  id           String     @id @default(cuid())
+  firebaseUid  String     @unique @map("firebase_uid")
+  email        String     @unique
+  phone        String?
+  firstName    String?    @map("first_name")
+  lastName     String?    @map("last_name")
+  role         UserRole   @default(customer)
+  locale       String     @default("bs")
+  status       UserStatus @default(active)
+  isHost       Boolean    @default(false) @map("is_host")
+  referralCode String?    @unique @map("referral_code")
+  referredById String?    @map("referred_by_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  referredBy            User?                     @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals             User[]                    @relation("UserReferrals")
+  cleanerProfile        CleanerProfile?
+  cleanerLegalProfile   CleanerLegalProfile?
+  verificationApps      VerificationApplication[] @relation("VerificationApplicant")
+  reviewedVerifications VerificationApplication[] @relation("VerificationReviewer")
+  properties            Property[]
+
+  @@map("users")
+}
+
+model City {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  active      Boolean  @default(true)
+  launchStage String?  @map("launch_stage")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  cleanerProfiles CleanerProfile[]
+  properties      Property[]
+
+  @@map("cities")
+}
+
+model CleanerProfile {
+  id              String          @id @default(cuid())
+  userId          String          @unique @map("user_id")
+  bio             String?
+  photoUrl        String?         @map("photo_url")
+  gender          String?
+  hourlyRateF     Int?            @map("hourly_rate_f")
+  cityId          String?         @map("city_id")
+  serviceRadiusKm Float?          @map("service_radius_km")
+  lat             Float?
+  lng             Float?
+  // Weekly slots jsonb — existing shape from lib/shared/types.ts Availability.
+  availability    Json?
+  tier            CleanerTier     @default(registered)
+  verifiedAt      DateTime?       @map("verified_at")
+  idChecked       Boolean         @default(false) @map("id_checked")
+  languages       String[]        @default([])
+  ratingAvg       Float?          @map("rating_avg")
+  ratingCount     Int             @default(0) @map("rating_count")
+  acceptsCash     Boolean         @default(true) @map("accepts_cash")
+  active          Boolean         @default(true)
+  engagementModel EngagementModel @default(marketplace) @map("engagement_model")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  user User  @relation(fields: [userId], references: [id])
+  city City? @relation(fields: [cityId], references: [id])
+
+  // cleaner_services join lands in E1.2 with service_types (same migration).
+
+  @@index([cityId, active, tier])
+  @@map("cleaner_profiles")
+}
+
+model CleanerLegalProfile {
+  id                     String       @id @default(cuid())
+  cleanerId              String       @unique @map("cleaner_id")
+  legalRegime            LegalRegime? @map("legal_regime")
+  entityOfResidence      String?      @map("entity_of_residence")
+  isStudent              Boolean      @default(false) @map("is_student")
+  studentProofUrl        String?      @map("student_proof_url")
+  studentProofValidUntil DateTime?    @map("student_proof_valid_until")
+  obrtIdNumber           String?      @map("obrt_id_number")
+  obrtRegistered         Boolean      @default(false) @map("obrt_registered")
+  // AES-GCM ciphertext, written only by the contract layer (E7) — never plaintext.
+  jmbgEncrypted          String?      @map("jmbg_encrypted")
+  bankAccountIban        String?      @map("bank_account_iban")
+  createdAt              DateTime     @default(now()) @map("created_at")
+  updatedAt              DateTime     @updatedAt @map("updated_at")
+
+  cleaner User @relation(fields: [cleanerId], references: [id])
+
+  @@map("cleaner_legal_profiles")
+}
+
+model VerificationApplication {
+  id              String             @id @default(cuid())
+  cleanerId       String             @map("cleaner_id")
+  status          VerificationStatus @default(applied)
+  interviewAt     DateTime?          @map("interview_at")
+  interviewMode   InterviewMode?     @map("interview_mode")
+  // { id_verified, references_checked, trial_cleaning, notes } — admin checklist.
+  checklist       Json?
+  reviewedById    String?            @map("reviewed_by_id")
+  rejectionReason String?            @map("rejection_reason")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  cleaner    User  @relation("VerificationApplicant", fields: [cleanerId], references: [id])
+  reviewedBy User? @relation("VerificationReviewer", fields: [reviewedById], references: [id])
+
+  @@index([status])
+  @@index([cleanerId])
+  @@map("verification_applications")
+}
+
+model Property {
+  id          String       @id @default(cuid())
+  ownerId     String       @map("owner_id")
+  label       String?
+  type        PropertyType @default(apartment)
+  cityId      String?      @map("city_id")
+  street      String?
+  houseNo     String?      @map("house_no")
+  floor       String?
+  hasElevator Boolean      @default(false) @map("has_elevator")
+  lat         Float?
+  lng         Float?
+  sizeM2      Int?         @map("size_m2")
+  rooms       Int?
+  bathrooms   Int?
+  pets        Boolean      @default(false)
+  accessNotes String?      @map("access_notes")
+  // Host checklist items: linens / restock / damage-report (§4 properties).
+  checklist   Json?
+  isAirbnb    Boolean      @default(false) @map("is_airbnb")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  owner User  @relation(fields: [ownerId], references: [id])
+  city  City? @relation(fields: [cityId], references: [id])
+
+  @@index([ownerId])
+  @@map("properties")
 }
