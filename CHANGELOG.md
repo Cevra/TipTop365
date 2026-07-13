@@ -2,6 +2,14 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-13 — tiptop-e1.2-catalog-block (E1.2)
+
+- **Catalog block (plan §4):** `service_types`, `addons`, `pricing_configs` (versioned) + the `cleaner_services` join deferred from E1.1. Migration `20260713152538_catalog_block` (applied to Neon).
+- `service_types`/`addons`.`key` are plain unique strings, not enums — the section is explicitly "admin-editable, no hardcoding" (§4); only `addons.unit` (fixed/per_window/per_hour/per_m2) is a Prisma enum since the pricing engine (E2.1) branches on it structurally.
+- `pricing_configs`: `m2_bands`/`recurring_discount_pct`/`cancellation_rules` as jsonb per the §5/§6 shapes; `rate_min_f`/`rate_max_f`/`cash_fee_f`/`negative_balance_limit_f` integer fenings (D5); `platform_fee_pct` plain Float (a rate, not a money amount). `@@unique([cityId, version])` guards duplicate versions — "exactly one active version per city" is left to E2.3's admin publish flow, not a DB constraint (would need a Postgres partial index outside Prisma's schema DSL; not worth it for a single-admin MVP).
+- `cleaner_services`: many-to-many `cleaner_profiles` ↔ `service_types`, composite-unique on the pair.
+- Tests: +4 integration (`catalog.db.spec.ts` — service/addon uniqueness, cleaner↔service-type linking, versioned pricing config incl. duplicate-version rejection). No new unit tests — no pure mapping/business logic in this task (that's E2.1); 94 unit / 9 integration total.
+
 ## 2026-07-13 — tiptop-e1.1-identity-model (E1.1)
 
 - **Identity block (plan §4):** 6 models — `users`, `cities`, `cleaner_profiles`, `cleaner_legal_profiles`, `verification_applications`, `properties` — + 8 enums, migration `20260713145632_identity_block` (applied to Neon). Money integer fenings (`hourly_rate_f`, D5); `engagement_model` enum default `marketplace` (D19 seam, values only); `locale` is a plain string mirroring `i18n/routing.ts` (no enum). `cleaner_legal_profiles.cleaner_id` FKs `users` directly per the §4 ERD.

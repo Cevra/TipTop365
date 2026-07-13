@@ -122,6 +122,7 @@ model City {
 
   cleanerProfiles CleanerProfile[]
   properties      Property[]
+  pricingConfigs  PricingConfig[]
 
   @@map("cities")
 }
@@ -151,10 +152,9 @@ model CleanerProfile {
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
 
-  user User  @relation(fields: [userId], references: [id])
-  city City? @relation(fields: [cityId], references: [id])
-
-  // cleaner_services join lands in E1.2 with service_types (same migration).
+  user     User             @relation(fields: [userId], references: [id])
+  city     City?            @relation(fields: [cityId], references: [id])
+  services CleanerService[]
 
   @@index([cityId, active, tier])
   @@map("cleaner_profiles")
@@ -230,4 +230,111 @@ model Property {
 
   @@index([ownerId])
   @@map("properties")
+}
+
+// ---------------------------------------------------------------------------
+// Catalog block (E1.2, plan §4 "Catalog & pricing — all admin-editable, no
+// hardcoding"). `key` fields are plain strings, not enums: the whole point of
+// this block is that admins add/edit catalog rows without a migration. Only
+// `unit` (a fixed unit-of-measure the pricing engine branches on) is an enum.
+// ---------------------------------------------------------------------------
+
+enum AddonUnit {
+  fixed
+  per_window
+  per_hour
+  per_m2
+}
+
+model ServiceType {
+  id                 String   @id @default(cuid())
+  key                String   @unique
+  nameBs             String   @map("name_bs")
+  nameEn             String   @map("name_en")
+  // Applied to the m²-band base hours, e.g. deep=1.6, move_out=1.8, airbnb=0.9.
+  durationMultiplier Float    @map("duration_multiplier")
+  requiresVerified   Boolean  @default(false) @map("requires_verified")
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  cleanerServices CleanerService[]
+
+  @@map("service_types")
+}
+
+model Addon {
+  id        String    @id @default(cuid())
+  key       String    @unique
+  nameBs    String    @map("name_bs")
+  nameEn    String    @map("name_en")
+  hours     Float
+  unit      AddonUnit
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("addons")
+}
+
+// Many-to-many: which service types a cleaner offers.
+model CleanerService {
+  id               String   @id @default(cuid())
+  cleanerProfileId String   @map("cleaner_profile_id")
+  serviceTypeId    String   @map("service_type_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  cleanerProfile CleanerProfile @relation(fields: [cleanerProfileId], references: [id])
+  serviceType    ServiceType    @relation(fields: [serviceTypeId], references: [id])
+
+  @@unique([cleanerProfileId, serviceTypeId])
+  @@map("cleaner_services")
+}
+
+// Versioned per-city pricing configuration (§5/§6). Bookings (E1.3) snapshot
+// `pricing_config_version` so historical bookings never reprice when an admin
+// publishes a new version — see plan §4 bookings row + gate G2.
+model PricingConfig {
+  id      String  @id @default(cuid())
+  cityId  String  @map("city_id")
+  version Int
+  active  Boolean @default(false)
+
+  // [{ maxM2: 40, hours: 2.0 }, …] + a top-level extraPer40M2 factor.
+  m2Bands Json @map("m2_bands")
+
+  rateMinF Int @map("rate_min_f")
+  rateMaxF Int @map("rate_max_f")
+
+  // Percentage points (20 = 20%), not money — D5 integer-fenings applies to
+  // amounts, not rates. Money-typed *_f fields below stay integer fenings.
+  platformFeePct Float @map("platform_fee_pct")
+
+  // { weekly: 10, biweekly: 7, monthly: 5 } — percentage points per frequency.
+  recurringDiscountPct Json @map("recurring_discount_pct")
+
+  cashFeeF Int? @map("cash_fee_f")
+
+  // [{ hoursBefore: 24, refundPct: 100 }, { hoursBefore: 0, refundPct: 50 },
+  //  { noShow: true, refundPct: 0 }]
+  cancellationRules Json @map("cancellation_rules")
+
+  // Not yet specified by the plan beyond the column name — plain string so
+  // admin can set whatever the eventual VAT policy needs without a migration.
+  vatMode String? @map("vat_mode")
+
+  negativeBalanceLimitF Int @default(-5000) @map("negative_balance_limit_f")
+  autoConfirmHours      Int @default(48) @map("auto_confirm_hours")
+  minAfterPhotosPerRoom Int @default(2) @map("min_after_photos_per_room")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  city City @relation(fields: [cityId], references: [id])
+
+  // E2.3 (admin publish flow) owns the "exactly one active version per city"
+  // invariant; this unique constraint only guards against duplicate versions.
+  @@unique([cityId, version])
+  @@index([cityId, active])
+  @@map("pricing_configs")
 }
