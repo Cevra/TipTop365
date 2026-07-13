@@ -2,6 +2,14 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-13 — tiptop-e1.3-booking-block (E1.3)
+
+- **Booking block (plan §4/§5):** 7 models — `bookings`, `booking_addons`, `booking_events`, `booking_offers`, `recurring_plans`, `price_adjustments`, `chat_messages` — + 7 enums. Migration `20260713154736_booking_block` (applied to Neon). Schema only — the FSM transition table (E3.4), pricing math (E2.1), and matching logic (E3.3/E3.6) are separate tasks.
+- `BookingStatus` values are exactly the §5 state-machine diagram's states (draft → pending_payment → matching → accepted → on_my_way → in_progress → pending_completion → completed, plus disputed/refunded/cancelled/expired branches) — no invented states.
+- `bookings.pricing_config_version` is a plain int snapshot, **not an FK** to `pricing_configs` — historical bookings must never repoint at a live config row (§6). `bookings.contract_id` is a plain column with no relation yet (`contracts` lands in E1.5 — same deferred-FK pattern as `cleaner_services` was for E1.1/E1.2).
+- `location_pings` intentionally **not** created here — it's E4.6's table, not listed in E1.3's row despite sitting in the same §4 table-inventory section.
+- Tests: +3 integration (`booking.db.spec.ts` — full graph incl. addons/events/offers/adjustment/chat, unique booking code, recurring-plan → spawned-booking link). No new unit tests (no pure logic in this task). 94 unit / 12 integration total.
+
 ## 2026-07-13 — tiptop-e1.2-catalog-block (E1.2)
 
 - **Catalog block (plan §4):** `service_types`, `addons`, `pricing_configs` (versioned) + the `cleaner_services` join deferred from E1.1. Migration `20260713152538_catalog_block` (applied to Neon).

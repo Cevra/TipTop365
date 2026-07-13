@@ -107,6 +107,10 @@ model User {
   verificationApps      VerificationApplication[] @relation("VerificationApplicant")
   reviewedVerifications VerificationApplication[] @relation("VerificationReviewer")
   properties            Property[]
+  bookingsAsCustomer    Booking[]
+  recurringPlans        RecurringPlan[]
+  chatMessages          ChatMessage[]
+  bookingEvents         BookingEvent[]
 
   @@map("users")
 }
@@ -152,9 +156,13 @@ model CleanerProfile {
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
 
-  user     User             @relation(fields: [userId], references: [id])
-  city     City?            @relation(fields: [cityId], references: [id])
-  services CleanerService[]
+  user                      User              @relation(fields: [userId], references: [id])
+  city                      City?             @relation(fields: [cityId], references: [id])
+  services                  CleanerService[]
+  bookingsAsCleaner         Booking[]
+  bookingOffers             BookingOffer[]
+  priceAdjustmentsRequested PriceAdjustment[]
+  preferredInPlans          RecurringPlan[]
 
   @@index([cityId, active, tier])
   @@map("cleaner_profiles")
@@ -225,8 +233,10 @@ model Property {
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
-  owner User  @relation(fields: [ownerId], references: [id])
-  city  City? @relation(fields: [cityId], references: [id])
+  owner          User            @relation(fields: [ownerId], references: [id])
+  city           City?           @relation(fields: [cityId], references: [id])
+  bookings       Booking[]
+  recurringPlans RecurringPlan[]
 
   @@index([ownerId])
   @@map("properties")
@@ -259,6 +269,8 @@ model ServiceType {
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   cleanerServices CleanerService[]
+  bookings        Booking[]
+  recurringPlans  RecurringPlan[]
 
   @@map("service_types")
 }
@@ -273,6 +285,8 @@ model Addon {
   active    Boolean   @default(true)
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
+
+  bookingAddons BookingAddon[]
 
   @@map("addons")
 }
@@ -337,4 +351,260 @@ model PricingConfig {
   @@unique([cityId, version])
   @@index([cityId, active])
   @@map("pricing_configs")
+}
+
+// ---------------------------------------------------------------------------
+// Booking block (E1.3, plan §4/§5). Schema only — the FSM transition table is
+// E3.4, the pricing math is E2.1, matching/offers logic is E3.3/E3.6. Status
+// values are exactly the §5 state-machine diagram's states, no invention.
+// `location_pings` is intentionally NOT here — it's built in E4.6.
+// ---------------------------------------------------------------------------
+
+enum BookingStatus {
+  draft
+  pending_payment
+  matching
+  accepted
+  on_my_way
+  in_progress
+  pending_completion
+  completed
+  disputed
+  refunded
+  cancelled
+  expired
+}
+
+enum PaymentMethod {
+  card
+  cash
+}
+
+enum MatchingMode {
+  direct
+  broadcast
+}
+
+// Shared actor vocabulary for booking_events.actor_type and bookings.cancelled_by.
+enum BookingActorType {
+  customer
+  cleaner
+  admin
+  system
+}
+
+enum BookingOfferStatus {
+  offered
+  seen
+  accepted
+  declined
+  expired
+  lost_race
+}
+
+enum RecurringFrequency {
+  weekly
+  biweekly
+  monthly
+}
+
+enum PriceAdjustmentStatus {
+  requested
+  approved
+  rejected
+}
+
+enum ChatFlagReason {
+  phone
+  email
+  social
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  code          String        @unique
+  customerId    String        @map("customer_id")
+  propertyId    String        @map("property_id")
+  // References cleaner_profiles.id (ERD: cleaner_profiles ||--o{ bookings), not users.id.
+  cleanerId     String?       @map("cleaner_id")
+  serviceTypeId String        @map("service_type_id")
+  status        BookingStatus @default(draft)
+
+  scheduledAt     DateTime @map("scheduled_at")
+  slotMinutes     Int      @map("slot_minutes")
+  recurringPlanId String?  @map("recurring_plan_id")
+
+  estHours Float @map("est_hours")
+
+  // Money: integer fenings (D5).
+  cleanerRateF   Int    @map("cleaner_rate_f")
+  cleanerAmountF Int    @map("cleaner_amount_f")
+  serviceFeeF    Int    @map("service_fee_f")
+  cashFeeF       Int    @map("cash_fee_f")
+  discountF      Int    @map("discount_f")
+  totalF         Int    @map("total_f")
+  currency       String @default("BAM")
+
+  paymentMethod PaymentMethod @map("payment_method")
+
+  // Full pricing computation trace (§6) — historical bookings never reprice.
+  pricingSnapshot      Json @map("pricing_snapshot")
+  // Plain snapshot of pricing_configs.version at booking time — deliberately
+  // NOT an FK, so a later pricing_configs edit/delete can never alter or break
+  // a past booking's numbers (plan §6: "booking stores the snapshot").
+  pricingConfigVersion Int  @map("pricing_config_version")
+
+  matchingMode    MatchingMode    @map("matching_mode")
+  // Snapshot from cleaner_profiles.engagement_model at booking time (D19).
+  engagementModel EngagementModel @map("engagement_model")
+
+  // contracts doesn't exist until E1.5 — plain column, no relation yet
+  // (same deferred-FK pattern as cleaner_services was for E1.1/E1.2).
+  contractId String? @map("contract_id")
+
+  specialNotes       String?           @map("special_notes")
+  cancelledBy        BookingActorType? @map("cancelled_by")
+  cancellationReason String?           @map("cancellation_reason")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customer      User            @relation(fields: [customerId], references: [id])
+  property      Property        @relation(fields: [propertyId], references: [id])
+  cleaner       CleanerProfile? @relation(fields: [cleanerId], references: [id])
+  serviceType   ServiceType     @relation(fields: [serviceTypeId], references: [id])
+  recurringPlan RecurringPlan?  @relation(fields: [recurringPlanId], references: [id])
+
+  addons           BookingAddon[]
+  events           BookingEvent[]
+  offers           BookingOffer[]
+  priceAdjustments PriceAdjustment[]
+  chatMessages     ChatMessage[]
+
+  @@index([customerId])
+  @@index([cleanerId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@map("bookings")
+}
+
+model BookingAddon {
+  id             String   @id @default(cuid())
+  bookingId      String   @map("booking_id")
+  addonId        String   @map("addon_id")
+  qty            Int      @default(1)
+  hoursSnapshot  Float    @map("hours_snapshot")
+  priceFSnapshot Int      @map("price_f_snapshot")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  addon   Addon   @relation(fields: [addonId], references: [id])
+
+  @@index([bookingId])
+  @@map("booking_addons")
+}
+
+// Append-only audit trail of the FSM (E3.4 writes these; schema only here).
+model BookingEvent {
+  id         String           @id @default(cuid())
+  bookingId  String           @map("booking_id")
+  fromStatus BookingStatus?   @map("from_status")
+  toStatus   BookingStatus    @map("to_status")
+  actorType  BookingActorType @map("actor_type")
+  // Null when actorType = system (no user actor, e.g. the auto-confirm job).
+  actorId    String?          @map("actor_id")
+  // e.g. GPS coords on check-in.
+  meta       Json?
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  actor   User?   @relation(fields: [actorId], references: [id])
+
+  @@index([bookingId, createdAt])
+  @@map("booking_events")
+}
+
+model BookingOffer {
+  id        String             @id @default(cuid())
+  bookingId String             @map("booking_id")
+  cleanerId String             @map("cleaner_id")
+  status    BookingOfferStatus @default(offered)
+  expiresAt DateTime           @map("expires_at")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  booking Booking        @relation(fields: [bookingId], references: [id])
+  cleaner CleanerProfile @relation(fields: [cleanerId], references: [id])
+
+  @@index([bookingId])
+  @@index([cleanerId, status])
+  @@map("booking_offers")
+}
+
+model RecurringPlan {
+  id          String             @id @default(cuid())
+  customerId  String             @map("customer_id")
+  propertyId  String             @map("property_id")
+  frequency   RecurringFrequency
+  // Day-of-week convention finalized by the generator job (E3.10) — not
+  // invented here; just an integer slot.
+  weekday     Int?
+  // "14:00" — matches the existing Availability { start, end } string convention.
+  time        String
+  active      Boolean            @default(true)
+  nextRunDate DateTime           @map("next_run_date")
+
+  // Booking template fields — a snapshot, not live FKs to a join table.
+  serviceTypeId      String  @map("service_type_id")
+  addonsTemplate     Json?   @map("addons_template")
+  preferredCleanerId String? @map("preferred_cleaner_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customer         User            @relation(fields: [customerId], references: [id])
+  property         Property        @relation(fields: [propertyId], references: [id])
+  serviceType      ServiceType     @relation(fields: [serviceTypeId], references: [id])
+  preferredCleaner CleanerProfile? @relation(fields: [preferredCleanerId], references: [id])
+  bookings         Booking[]
+
+  @@index([active, nextRunDate])
+  @@map("recurring_plans")
+}
+
+model PriceAdjustment {
+  id            String                @id @default(cuid())
+  bookingId     String                @map("booking_id")
+  requestedById String                @map("requested_by_id")
+  reason        String
+  extraHours    Float                 @map("extra_hours")
+  extraAmountF  Int                   @map("extra_amount_f")
+  status        PriceAdjustmentStatus @default(requested)
+  approvedAt    DateTime?             @map("approved_at")
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @updatedAt @map("updated_at")
+
+  booking     Booking        @relation(fields: [bookingId], references: [id])
+  requestedBy CleanerProfile @relation(fields: [requestedById], references: [id])
+
+  @@index([bookingId])
+  @@map("price_adjustments")
+}
+
+model ChatMessage {
+  id         String          @id @default(cuid())
+  bookingId  String          @map("booking_id")
+  senderId   String          @map("sender_id")
+  // Masking/contact-detection is E4.5 — this column just stores the (already
+  // masked, per that future logic) body.
+  body       String
+  flagged    Boolean         @default(false)
+  flagReason ChatFlagReason? @map("flag_reason")
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  sender  User    @relation(fields: [senderId], references: [id])
+
+  @@index([bookingId, createdAt])
+  @@map("chat_messages")
 }
