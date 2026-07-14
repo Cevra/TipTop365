@@ -33,5 +33,15 @@
   "Home": {
     "metaTitle": "TipTop365 — Your cleaning marketplace",
     "metaDescription": "Connect with vetted cleaners. Book cleaning online with fixed, upfront pricing."
+  },
+  "Quote": {
+    "cleaning": "Cleaning ({hours} h × {rate}/h)",
+    "recurringDiscount": "Recurring discount (−{pct} %)",
+    "serviceFee": "Service fee",
+    "cashFee": "Cash handling fee",
+    "total": "Total",
+    "estimatedTotal": "Estimated total",
+    "range": "from {min} to {max}",
+    "rangeHint": "Estimated duration: {hours} h. The final price depends on the chosen cleaner’s hourly rate."
   }
 }
