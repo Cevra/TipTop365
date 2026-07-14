@@ -2,6 +2,18 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e3.8-cancellation (E3.8)
+
+- **Cancellation with config rules + refund calc (§6 tiers, mock refunds).** Pure `lib/domain/cancellation.ts`: `parseCancellationRules` (zod, loud on malformed admin jsonb), `resolveRefundPct` (most generous applicable timed rule wins; no-show resolved by its own flag per the §5 admin-determination note), `computeRefundF` (integer fenings).
+- **`POST /api/bookings/:id/cancel`:** `matching` cancels free (§5 edge annotation — 100 % regardless of timing); `accepted` uses the **snapshotted config version's** tiers by hours-before-slot. FSM `customer_cancelled` records `refundPct/refundF` on the event + reason on the booking; card refunds go through the PaymentProvider (idempotency key `refund:<bookingId>`) and land as `payments` rows — §7 ledger postings arrive with E5. Cash has nothing captured to refund.
+- Tests: +7 unit (168 total), +3 integration (free matching cancel, 100/50 % tiers with exact fening amounts + refund payment rows, non-cancellable/foreign rejections).
+
+## 2026-07-15 — tiptop-e3.6-broadcast-matching (E3.6)
+
+- **Broadcast matching (§3 step 5, first-accept wins).** `lib/server/bookings/broadcast.ts`: `broadcastOffers` (same eligibility rules as search — city/service/verified/radius; idempotent per cleaner; offers expire at slot − 6 h per §5), `acceptOffer` (**race decided by the FSM's status-guarded update** — G3's concurrency test proves exactly one winner; winner is exact-repriced from their rate against the **snapshotted** config version, always ≤ the draft ceiling; siblings flip `lost_race`), `expireMatching` (stale offers → `expired`; stuck matchings → the `offers_expired` FSM edge).
+- Routes: `GET /api/offers` (inbox for E4.2 — address withheld per H5 privacy), `POST /api/offers/:id/accept|decline`, `POST /api/jobs/expire-offers` (Vercel Cron, `CRON_SECRET` bearer auth via new `lib/server/jobs.ts`; jobs fail loudly 503 when unset). Confirm endpoint now best-effort dispatches offers on entering matching (failure never undoes a successful payment).
+- Tests: +4 integration incl. the G3 race (parallel accepts → exactly 1 winner) and the expiry job end-to-end. (This entry was restored in the E3.8 commit — a shell-quoting bug dropped it from the E3.6 commit itself.)
+
 ## 2026-07-15 — tiptop-e3.2-booking-wizard (E3.2)
 
 - **Booking wizard steps 1–3 (§11/H1), rebuilt over `book-service`** — the legacy direct-to-Firestore form is gone (D3). Property step (cards from `/api/properties`, incomplete properties flagged not bookable), service+addons step (multiplier badges, qty steppers for per-window/per-hour), date/slot/recurring step (discount badges from live config). Sticky bottom bar with the live `useQuote` range re-quote; **prototype v2 feedback applied: back button in the header, overflow-safe totals.** New `Wizard` i18n namespace (bs/en parity).
