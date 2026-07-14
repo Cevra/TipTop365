@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-14 — tiptop-e3.5-mock-provider (E3.5)
+
+- **`PaymentProvider` interface (D6, `lib/server/payments/provider.ts`):** Stripe-shaped — `capture/refund/void/tokenize/verifyWebhook`, integer fenings, idempotency-keyed. Registry behind `PAYMENT_PROVIDER` env (default `mock`); Monri (E6) slots in without touching anything above the interface.
+- **`MockProvider`:** deterministic, dependency-free; magic tokens simulate declines (`tok_declined`, `tok_3ds_fail`) so E2E can drive failure paths without a PSP sandbox; replay-safe idempotency cache (same key → same result, like a real PSP — even for declines); sha256 webhook signature convention.
+- **`POST /api/bookings/:id/confirm` (§10):** contract e-accept (stub per task row — the FSM edge + event meta are what E7.2 keeps; the PDF layer arrives there) → D7 immediate capture → `payment_secured` → `matching`. **Scope decision:** a declined card returns 402 `PAYMENT_DECLINED` and leaves the booking in `pending_payment` for retry (per-attempt idempotency keys so retries aren't swallowed by the replay cache) — §5's `payment_failed`/`payment_abandoned` edges belong to the 1 h abandonment job (E5.4), not first declines. Cash bookings are `CASH_PAYMENTS_ENABLED`-gated and skip capture ("cash allowed", §5).
+- Tests: +6 unit (152 total — provider idempotency, magic tokens, webhook verify, tokenize, registry), +5 integration (card happy path with event trail, decline→retry, cash path, ownership + acceptance guards, past-payment 409).
+
 ## 2026-07-14 — tiptop-e3.4-booking-fsm (E3.4)
 
 - **Booking FSM `lib/domain/bookingFsm/` (plan §5) — the transition table is a 1:1 transcription of the §5 diagram + notes: 20 edges, no invented states.** `transition(from, action, actor)` throws typed `IllegalTransitionError` / `WrongActorError` (admin is NOT a wildcard — only its §5 edges: no-show, dispute resolution); `actionsFor(status, actor)` drives which buttons screens render; side effects are **descriptors** (`ledger.release/refund/partial`, `payout_freeze`, `rematch`, `purge_prejob_photos`) returned to the caller — E5/E3.6/E12.1 register executors later, nothing is silently half-implemented.

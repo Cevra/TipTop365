@@ -532,7 +532,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 | E3.2 | Booking wizard steps 1–3 (property, service+addons, date/slot + recurring) rebuilt over existing `book-service` page | L | E2.2, E3.1 |
 | E3.3 | Cleaner search & ranking (verified→rating→distance→price) + "first available" option | L | E1.3 |
 | E3.4 | Booking FSM module + `booking_events` + transition tests | L | E1.3 | ✅ 2026-07-14 |
-| E3.5 | `PaymentProvider` interface + `MockProvider` + confirm endpoint (contract gate stubbed until E7) | M | E3.4 |
+| E3.5 | `PaymentProvider` interface + `MockProvider` + confirm endpoint (contract gate stubbed until E7) | M | E3.4  ✅ 2026-07-14 |
 | E3.6 | Broadcast matching: `booking_offers`, expiry job, **race-safe first-accept (concurrency test)** | L | E3.4 |
 | E3.7 | Pre-job photo upload (encrypt, private zone) + prompt UX | L | E1.5 |
 | E3.8 | Cancellation w/ config rules + refund calc (mock) | M | E3.5 |
