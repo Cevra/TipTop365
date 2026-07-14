@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-14 — tiptop-e2.1-pricing-engine (E2.1)
+
+- **Pricing engine `lib/domain/pricing/` (plan §6) — pure, zero I/O, test-first.** `config.ts` (zod-parses the admin-edited `pricing_configs` jsonb into a typed shape; malformed config throws `PricingConfigError` instead of producing NaN money), `estimateHours.ts` (§6 band lookup + beyond-band extrapolation per started 40 m², multiplier-before-addons order, `roundToQuarter` half-up), `price.ts` (integer-fenings D5 math; out-of-bounds cleaner rate **throws** — never silently clamps; E2.4 owns UI enforcement), `snapshot.ts` (`buildQuote` → the full `PricingSnapshot` trace that E2.2 returns and bookings store).
+- **§6 worked examples are canonical fixtures:** 75 m² standard + oven @ 12 KM/h → 4.0 h, 4 800 + 960 = 5 760 f (`"57,60 KM"` via `formatKM`); weekly −10 % → 4 320 + 864 = 5 184 f (`"51,84 KM"`).
+- **Property tests (fast-check, new devDependency; §13 E2.1 requirement):** breakdown sums to total, no negative/non-integer money, discount ≤ cleaner amount, hours monotone in m², card ≤ cash, recurring never raises the price — 500 randomized runs each.
+- Tests: +20 unit (121 total; 28 integration untouched). This closes G2's automated half; the manual quote-UI check lands with E2.2.
+
 ## 2026-07-14 — bunny-key-server-side (security hotfix)
 
 - **Removed the Bunny storage AccessKey from the client bundle.** `app/[locale]/(app)/profile/[id]/edit/page.tsx` hardcoded `BUNNY_API_KEY` and PUT/DELETEd `storage.bunnycdn.com` directly from the browser — a write credential shipped to every visitor. ⚠️ **The key is in git history: rotate the storage-zone password in the Bunny dashboard** (Storage → tiptop-storage → FTP & API Access), then update `BUNNY_STORAGE_PASSWORD` in `.env.local`, Vercel, and the backup workflow secret.
