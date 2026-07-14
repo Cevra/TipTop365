@@ -29,6 +29,7 @@ export const RATE_LIMITS = {
   auth: { capacity: 10, refillPerSec: 10 / 60 }, // ~10/min
   quote: { capacity: 30, refillPerSec: 30 / 60 },
   chat: { capacity: 20, refillPerSec: 20 / 60 },
+  upload: { capacity: 10, refillPerSec: 10 / 60 },
 } as const;
 
 /** Test-only: clear all buckets. */

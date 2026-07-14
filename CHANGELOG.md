@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-14 — bunny-key-server-side (security hotfix)
+
+- **Removed the Bunny storage AccessKey from the client bundle.** `app/[locale]/(app)/profile/[id]/edit/page.tsx` hardcoded `BUNNY_API_KEY` and PUT/DELETEd `storage.bunnycdn.com` directly from the browser — a write credential shipped to every visitor. ⚠️ **The key is in git history: rotate the storage-zone password in the Bunny dashboard** (Storage → tiptop-storage → FTP & API Access), then update `BUNNY_STORAGE_PASSWORD` in `.env.local`, Vercel, and the backup workflow secret.
+- New `POST /api/profile/image` (multipart `file` + optional `previousUrl`): auth (session cookie, with Bearer ID-token fallback until legacy pages call `startSession`), per-uid rate limit (new `upload` preset), image-only ≤5 MB, best-effort delete of the replaced avatar — only inside the caller's own `profile-images/<uid>/` folder (path-traversal / foreign-key deletes rejected, unit-tested).
+- First cut of the **`StorageProvider` interface (plan §1.1)** in `lib/server/storage/` with a Bunny implementation reading `BUNNY_STORAGE_ZONE/PASSWORD/HOST` (same contract as `scripts/db-dump.mjs`) + new `BUNNY_CDN_HOST` (.env.example) for public URLs. Lazy env read, so builds don't need credentials.
+- Edit page now uploads via the API; dead `firebase/storage` imports dropped. 101 unit tests (+7).
+
 ## 2026-07-14 — tiptop-e1.5-legal-media-ops (E1.5)
 
 - **Legal/media/ops block (plan §4/§8/§9):** 13 models — `contract_templates`, `contracts`, `day_limit_entries`, `consents`, `deletion_requests`, `photos`, `reviews`, `disputes`, `notifications`, `promo_codes`, `promo_redemptions`, `audit_log`, `analytics_events` — + 9 enums. Migration `20260714_legal_media_ops_block` (applied to Neon). **Completes the §4 inventory except `location_pings` (E4.6).**

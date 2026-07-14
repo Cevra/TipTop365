@@ -4,8 +4,7 @@ import { useEffect, useState, ChangeEvent } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { doc, getDoc, updateDoc, setDoc, collection } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/firebaseConfig";
+import { db } from "@/firebaseConfig";
 import { useAuth } from "@/contexts/AuthContext";
 import { Address } from "@/lib/shared/types";
 
@@ -27,10 +26,6 @@ interface SnackbarState {
   message: string;
   type: 'success' | 'error';
 }
-
-const BUNNY_STORAGE_ZONE = 'tiptop-storage';
-const BUNNY_API_KEY = 'c627727a-4f25-4fc0-bd364a57ef64-597a-48c2';
-const BUNNY_PULL_ZONE_URL = 'https://tiptop-365.b-cdn.net/';
 
 const ProfileEditPage = () => {
   const params = useParams();
@@ -383,69 +378,39 @@ const ProfileEditPage = () => {
         phoneNumber: formData.phoneNumber,
       };
 
-      // Handle profile image
+      // Handle profile image — upload through our API (storage credentials
+      // stay server-side); the route also deletes the replaced image.
       if (profileImage) {
         try {
           setUploadProgress(10);
 
-          // Delete old image if it exists
+          const body = new FormData();
+          body.append('file', profileImage);
           if (profile.profileImageUrl) {
-            try {
-              // Extract the path from the old URL
-              const oldImagePath = profile.profileImageUrl
-                .replace(BUNNY_PULL_ZONE_URL, '')
-                .replace('https://tiptop-storage.b-cdn.net/', ''); // Handle old URLs too
-
-              // Delete the old image
-              const deleteResponse = await fetch(
-                `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${oldImagePath}`, 
-                {
-                  method: 'DELETE',
-                  headers: {
-                    'AccessKey': BUNNY_API_KEY
-                  }
-                }
-              );
-
-              if (!deleteResponse.ok) {
-                console.error('Failed to delete old image, continuing with upload...');
-              }
-            } catch (deleteError) {
-              console.error('Error deleting old image:', deleteError);
-              // Continue with upload even if delete fails
-            }
+            body.append('previousUrl', profile.profileImageUrl);
           }
 
-          // Upload new image
-          const timestamp = Date.now();
-          const safeFileName = profileImage.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-          const filename = `profile-images/${user.uid}/${timestamp}-${safeFileName}`;
-          
-          setUploadProgress(20);
+          const idToken = await user.getIdToken();
+          setUploadProgress(30);
 
-          // Upload to BunnyCDN Storage
-          const response = await fetch(`https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${filename}`, {
-            method: 'PUT',
-            headers: {
-              'AccessKey': BUNNY_API_KEY,
-              'Content-Type': profileImage.type || 'application/octet-stream',
-            },
-            body: profileImage,
+          const response = await fetch('/api/profile/image', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${idToken}` },
+            body,
           });
 
           setUploadProgress(80);
 
           if (!response.ok) {
-            throw new Error(`Failed to upload image to BunnyCDN: ${response.statusText}`);
+            throw new Error(`Failed to upload image (${response.status})`);
           }
 
-          // Use basic Pull Zone URL without optimization parameters
-          const imageUrl = `${BUNNY_PULL_ZONE_URL}${filename}`;
-          updateData.profileImageUrl = imageUrl;
-          
+          const { data } = await response.json();
+          updateData.profileImageUrl = data.url;
+
           setUploadProgress(100);
         } catch (error) {
-          console.error('Error uploading to BunnyCDN:', error);
+          console.error('Error uploading profile image:', error);
           setSnackbar({
             open: true,
             message: "Greška pri uploadovanju slike. Pokušajte ponovo.",
