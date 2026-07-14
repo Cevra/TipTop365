@@ -2,6 +2,12 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e3.10-recurring-generator (E3.10)
+
+- **Recurring plans materializer (§5 note: daily job, 14 days ahead, one `bookings` row per occurrence).** Pure `lib/domain/recurring.ts` (`nextRunDate` — monthly clamps Jan 31 → Feb 28 instead of skipping into March; `isDue` horizon check) + `lib/server/bookings/generateRecurring.ts`: due plans get a draft (server-repriced range ceiling with the recurring discount, addon template snapshotted), plan advances only after a successful occurrence — **idempotent two ways** ((plan, scheduledAt) existence check + forward-only nextRunDate), incomplete properties are reported and never advanced past, per-plan hop cap guards corrupt dates.
+- `POST /api/jobs/generate-recurring` (Vercel Cron daily, same `CRON_SECRET` auth as expire-offers).
+- Tests: +4 unit (172 total — date math incl. month-clamp + year rollover, horizon edges), +2 integration (69 total — materialize + advance + discount math + double-run no-op; incomplete property reported, plan frozen).
+
 ## 2026-07-15 — tiptop-e3.8-cancellation (E3.8)
 
 - **Cancellation with config rules + refund calc (§6 tiers, mock refunds).** Pure `lib/domain/cancellation.ts`: `parseCancellationRules` (zod, loud on malformed admin jsonb), `resolveRefundPct` (most generous applicable timed rule wins; no-show resolved by its own flag per the §5 admin-determination note), `computeRefundF` (integer fenings).

@@ -537,7 +537,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 | E3.7 | Pre-job photo upload (encrypt, private zone) + prompt UX | L | E1.5 |
 | E3.8 | Cancellation w/ config rules + refund calc (mock) | M | E3.5  ✅ 2026-07-15 |
 | E3.9 | Customer bookings list + detail timeline UI | M | E3.4 |
-| E3.10 | Recurring plans + daily generator job | M | E3.4 |
+| E3.10 | Recurring plans + daily generator job | M | E3.4  ✅ 2026-07-15 |
 | E3.11 | Playwright E2E: full booking happy path (card-mock + cash) | M | E3.1–3.9 |
 
 ### E4 — Cleaner flow (§10.4)
