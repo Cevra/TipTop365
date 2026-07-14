@@ -521,9 +521,9 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 | ID | Task | Size | Depends |
 |---|---|---|---|
 | E2.1 | **`lib/domain/pricing/`: bands, multipliers, addons, recurring discount, fees, rounding — full unit suite incl. worked examples + property tests (never negative, breakdown sums to total)** | L | E1.2 | ✅ 2026-07-14 |
-| E2.2 | `POST /api/pricing/quote` + quote UI component (breakdown, Airbnb-style) | M | E2.1 |
+| E2.2 | `POST /api/pricing/quote` + quote UI component (breakdown, Airbnb-style) | M | E2.1 | ✅ 2026-07-14 |
 | E2.3 | Admin pricing-config editor (versioned publish, per city) | L | E9.1 |
-| E2.4 | Rate min/max enforcement in cleaner profile + hint UI | S | E2.1 |
+| E2.4 | Rate min/max enforcement in cleaner profile + hint UI | S | E2.1 | ✅ 2026-07-14 |
 
 ### E3 — Customer booking flow end-to-end w/ mock payment (§10.3)
 | ID | Task | Size | Depends |

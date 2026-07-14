@@ -2,6 +2,19 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-14 — tiptop-e2.4-rate-bounds (E2.4)
+
+- **Cleaner-rate bounds enforcement + hint UI (plan §6 "min/max from city cfg").** Pure helpers `lib/domain/pricing/rateBounds.ts` (`isRateWithinBounds` inclusive integer-fening check, `rateBoundsHint` → "8,00 KM–15,00 KM", `kmInputToFenings`).
+- `become-provider` rate field now validates against the **live city bounds** from `GET /api/catalog` (replaces the hardcoded 1–100 BAM check) with a visible allowed-range hint + HTML min/max; falls back to the legacy sanity check if the catalog is unreachable — the pricing engine remains the server-side backstop (out-of-bounds rate throws at quote/booking, E2.1). Strings stay hardcoded-bs like the rest of this legacy page (full extraction is E11; page rebuild is E4.1).
+- Tests: +4 unit (125 total).
+
+## 2026-07-14 — tiptop-e2.2-quote-endpoint (E2.2)
+
+- **`POST /api/pricing/quote` (§10)** — public, server-computed only (§6: client prices never trusted), per-IP rate-limited (quote preset). With `rateF` (chosen cleaner) → exact `PricingSnapshot`; without → **min–max range** from the city's rate bounds (scope decision: pre-selection/broadcast quotes can't know the cleaner's rate, and the config has no "default rate" — a range is honest and §6-faithful). Stable error codes: `CITY_NOT_FOUND`/`SERVICE_TYPE_NOT_FOUND`/`ADDON_NOT_FOUND`/`QUOTE_INVALID`; broken admin jsonb → 500 `PRICING_CONFIG_INVALID` (never NaN money).
+- **`GET /api/catalog?city=`** (§10, same API-surface group) — active services + addons (bilingual names) + public pricing subset (rate bounds, fee %, discounts, cash fee, version). Feeds the wizard (E3.2), quote UI and E2.4.
+- **`QuoteBreakdown`** client component (`app/components/quote/`) reusing the E0.10 `PriceBreakdown` primitive — exact mode = Airbnb-style expandable breakdown, range mode = "od X do Y KM" summary; new `Quote` i18n namespace (bs/en parity). Debounced `useQuote` hook (`lib/client/`). `lib/server/requestIp.ts` extracted for reuse.
+- Tests: +9 integration (37 total) — §6 worked example through the HTTP layer, range math from seed bounds, cash+recurring composition, error codes, per-IP rate limiting (fast no-DB requests so the token bucket can't refill mid-test).
+
 ## 2026-07-14 — tiptop-e2.1-pricing-engine (E2.1)
 
 - **Pricing engine `lib/domain/pricing/` (plan §6) — pure, zero I/O, test-first.** `config.ts` (zod-parses the admin-edited `pricing_configs` jsonb into a typed shape; malformed config throws `PricingConfigError` instead of producing NaN money), `estimateHours.ts` (§6 band lookup + beyond-band extrapolation per started 40 m², multiplier-before-addons order, `roundToQuarter` half-up), `price.ts` (integer-fenings D5 math; out-of-bounds cleaner rate **throws** — never silently clamps; E2.4 owns UI enforcement), `snapshot.ts` (`buildQuote` → the full `PricingSnapshot` trace that E2.2 returns and bookings store).
