@@ -7,6 +7,19 @@ import { prisma } from '@/lib/server/db';
 import { isEnabled } from '@/lib/server/featureFlags';
 import { getPaymentProvider } from '@/lib/server/payments/mockProvider';
 import { applyBookingTransition } from '@/lib/server/bookings/applyTransition';
+import { broadcastOffers } from '@/lib/server/bookings/broadcast';
+
+// Best-effort offer dispatch on entering matching (E3.6). Failure must not
+// undo a successful payment — the expire-offers cron and admin tooling can
+// re-broadcast; the booking is already safely in matching.
+async function tryBroadcast(bookingId: string, matchingMode: string): Promise<void> {
+  if (matchingMode !== 'broadcast') return;
+  try {
+    await broadcastOffers(bookingId);
+  } catch (err) {
+    console.error('broadcastOffers failed for', bookingId, err);
+  }
+}
 
 export const runtime = 'nodejs';
 
@@ -59,6 +72,7 @@ export const POST = handler(async (request: Request, { params }: Ctx) => {
       actor: { type: 'system' },
       meta: { method: 'cash' },
     });
+    await tryBroadcast(updated.id, updated.matchingMode);
     return ok({ booking: updated, payment: null });
   }
 
@@ -102,5 +116,6 @@ export const POST = handler(async (request: Request, { params }: Ctx) => {
     actor: { type: 'system' },
     meta: { method: 'card', paymentId: payment.id, providerRef: result.providerRef },
   });
+  await tryBroadcast(updated.id, updated.matchingMode);
   return ok({ booking: updated, payment });
 });
