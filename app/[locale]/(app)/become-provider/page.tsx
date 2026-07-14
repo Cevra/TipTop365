@@ -13,6 +13,7 @@ import { db } from "@/firebaseConfig";
 import { useRouter } from "@/i18n/navigation";
 import { ServiceProvider } from "@/lib/shared/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { isRateWithinBounds, kmInputToFenings, rateBoundsHint, type RateBounds } from "@/lib/domain/pricing";
 
 type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
@@ -156,9 +157,24 @@ const BecomeProvider = () => {
     }
   };
 
+  // City rate bounds from the active pricing config (E2.4). Falls back to the
+  // legacy 1–100 sanity check while loading / if the fetch fails — the pricing
+  // engine re-rejects out-of-bounds rates server-side at quote/booking time.
+  const [rateBounds, setRateBounds] = useState<RateBounds | null>(null);
+  useEffect(() => {
+    fetch('/api/catalog?city=sarajevo')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        const pricing = json?.data?.pricing;
+        if (pricing) setRateBounds({ rateMinF: pricing.rateMinF, rateMaxF: pricing.rateMaxF });
+      })
+      .catch(() => {});
+  }, []);
+
   // Validation functions
   const validateHourlyRate = (rate: number): boolean => {
-    return rate > 0 && rate <= 100; // Reasonable range for hourly rate in BAM
+    if (rateBounds) return isRateWithinBounds(kmInputToFenings(rate), rateBounds);
+    return rate > 0 && rate <= 100; // fallback sanity range (catalog unavailable)
   };
 
   const validateAvailability = (availability: Availability): boolean => {
@@ -204,7 +220,9 @@ const BecomeProvider = () => {
     if (!validateHourlyRate(formData.pricePerHour)) {
       setSnackbar({
         open: true,
-        message: 'Cijena po satu mora biti između 1 i 100 BAM',
+        message: rateBounds
+          ? `Cijena po satu mora biti u rasponu ${rateBoundsHint(rateBounds)} po satu`
+          : 'Cijena po satu mora biti između 1 i 100 BAM',
         type: 'error'
       });
       return false;
@@ -385,10 +403,16 @@ const BecomeProvider = () => {
                     placeholder="Unesite vašu satnicu"
                     onChange={handleMainFormDataChange}
                     required
-                    min="1"
+                    min={rateBounds ? rateBounds.rateMinF / 100 : 1}
+                    max={rateBounds ? rateBounds.rateMaxF / 100 : undefined}
                     step="0.01"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#02404B] focus:ring-[#02404B] sm:text-sm placeholder:text-gray-400"
                   />
+                  {rateBounds && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Dozvoljeni raspon: {rateBoundsHint(rateBounds)} po satu
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">
