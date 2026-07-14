@@ -33,5 +33,15 @@
   "Home": {
     "metaTitle": "TipTop365 — Vaša platforma za čišćenje",
     "metaDescription": "Povežite se s provjerenim čistačima. Rezervišite čišćenje online, s fiksnom cijenom."
+  },
+  "Quote": {
+    "cleaning": "Čišćenje ({hours} h × {rate}/h)",
+    "recurringDiscount": "Popust za ponavljanje (−{pct} %)",
+    "serviceFee": "Naknada za uslugu",
+    "cashFee": "Naknada za gotovinu",
+    "total": "Ukupno",
+    "estimatedTotal": "Procijenjeno ukupno",
+    "range": "od {min} do {max}",
+    "rangeHint": "Procijenjeno trajanje: {hours} h. Konačna cijena zavisi od satnice odabrane čistačice."
   }
 }
