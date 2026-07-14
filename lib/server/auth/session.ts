@@ -28,6 +28,7 @@ export async function verifySession(cookie: string | undefined): Promise<Session
       uid: decoded.uid,
       role: (decoded.role as AppRole) ?? 'customer',
       verified: Boolean(decoded.verified),
+      email: decoded.email,
     };
   } catch {
     return null;

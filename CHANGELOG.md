@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-14 — tiptop-e3.1-properties-crud (E3.1)
+
+- **Properties CRUD (plan §3 hosts):** `GET/POST /api/properties`, `GET/PATCH/DELETE /api/properties/:id` — all owner-scoped from the verified session (foreign ids 404, no existence oracle); zod schemas in `lib/server/properties.ts` incl. the turnover `checklist` shape (linens/restock[]/damageReport). DELETE pre-checks bookings → 409 `PROPERTY_IN_USE`, with a duck-typed FK backstop (**finding:** Prisma 6 surfaces `ON DELETE RESTRICT` violations as `PrismaClientUnknownRequestError` with raw PG code 23001, NOT `P2003` — `isForeignKeyViolation` handles both).
+- **`lib/server/users.ts` `requireDbUser`:** bridges a verified Firebase session to the Postgres `users` row, provisioning it on first authenticated API use (legacy accounts predate the backfill `--commit`); role from the verified custom claim. `SessionClaims` now carries `email` from the token for exactly this.
+- **`/properties` UI** (`(app)` route group, added to `PROTECTED_PREFIXES`): list/create/edit/delete built entirely from E0.10 primitives (Input/Select/Textarea/Button/EmptyState/ConfirmDialog/Toast), checklist editor (restock chips) shown for vacation rentals / Airbnb-flagged properties, new `Properties` i18n namespace (bs/en parity, 39 keys).
+- Tests: +6 integration (44 total) — session mocked at the cookie-verification seam only (needs live Firebase); user provisioning, owner scoping, partial PATCH validation, checklist round-trip, delete + 409-in-use are all real DB.
+
 ## 2026-07-14 — tiptop-e2.4-rate-bounds (E2.4)
 
 - **Cleaner-rate bounds enforcement + hint UI (plan §6 "min/max from city cfg").** Pure helpers `lib/domain/pricing/rateBounds.ts` (`isRateWithinBounds` inclusive integer-fening check, `rateBoundsHint` → "8,00 KM–15,00 KM", `kmInputToFenings`).
