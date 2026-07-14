@@ -28,6 +28,7 @@ export function rateLimit(key: string, opts: TokenBucketOptions, cost = 1): Rate
 export const RATE_LIMITS = {
   auth: { capacity: 10, refillPerSec: 10 / 60 }, // ~10/min
   quote: { capacity: 30, refillPerSec: 30 / 60 },
+  search: { capacity: 30, refillPerSec: 30 / 60 },
   chat: { capacity: 20, refillPerSec: 20 / 60 },
   upload: { capacity: 10, refillPerSec: 10 / 60 },
 } as const;

@@ -2,6 +2,12 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-14 — tiptop-e3.3-cleaner-search (E3.3)
+
+- **Cleaner search & ranking (plan §3 step 5).** Pure comparator `lib/domain/cleanerRanking.ts` — §13 order verified → rating desc → distance asc (haversine) → price asc, with missing data always ranking below known data within a criterion (unrated under rated, unknown distance last — never interleaved by accident). `withinServiceRadius` assumes in-range when coordinates/radius are missing (legacy roster data is sparse; excluding on missing data would hide it).
+- **`GET /api/cleaners/search?city=&serviceType=&lat=&lng=`** — public (guests browse, §2), rate-limited (new `search` preset). Airbnb service types force verified-only; `ALLOW_UNVERIFIED_BOOKINGS=false` (D12 flag) does too. Response carries `broadcastAvailable` for the H2 "prvi slobodan" pinned card (the broadcast mechanics are E3.6). **Anti-disintermediation (§12.4): payload has first name + last initial only, no contact fields** — asserted by test.
+- Tests: +9 unit (161 total — comparator laws, haversine sanity, radius edge cases), +5 integration (62 total — seed-roster ranking with no tier interleaving, Airbnb verified-only, flag override via env, city scoping, validation).
+
 ## 2026-07-14 — tiptop-e3.5-mock-provider (E3.5)
 
 - **`PaymentProvider` interface (D6, `lib/server/payments/provider.ts`):** Stripe-shaped — `capture/refund/void/tokenize/verifyWebhook`, integer fenings, idempotency-keyed. Registry behind `PAYMENT_PROVIDER` env (default `mock`); Monri (E6) slots in without touching anything above the interface.
