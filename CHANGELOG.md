@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-14 — tiptop-e3.4-booking-fsm (E3.4)
+
+- **Booking FSM `lib/domain/bookingFsm/` (plan §5) — the transition table is a 1:1 transcription of the §5 diagram + notes: 20 edges, no invented states.** `transition(from, action, actor)` throws typed `IllegalTransitionError` / `WrongActorError` (admin is NOT a wildcard — only its §5 edges: no-show, dispute resolution); `actionsFor(status, actor)` drives which buttons screens render; side effects are **descriptors** (`ledger.release/refund/partial`, `payout_freeze`, `rematch`, `purge_prejob_photos`) returned to the caller — E5/E3.6/E12.1 register executors later, nothing is silently half-implemented.
+- **`lib/server/bookings/applyTransition.ts`:** status update + append-only `booking_events` row in one transaction, **race-safe via status-guarded `updateMany`** — two competing transitions → exactly one wins, loser gets 409 (`BOOKING_STATE_CHANGED`), proven by a concurrency test. Cancelling edges persist `cancelled_by` + reason on the booking; FSM violations map to stable API codes (409 `ILLEGAL_TRANSITION`, 403 `FORBIDDEN_ACTOR`).
+- Table-integrity tests pin the edge count (20) and graph reachability from `draft`, so any future edge change is a visible diff, not drift. Happy path, auto-confirm twin, dispute resolutions, re-matching on cleaner cancel, no-show scoping, and 8 illegal-transition cases all asserted.
+- Tests: +21 unit (146 total), +4 integration (47 total) incl. gapless event-chain assertion (each `from_status` = previous `to_status`) and GPS meta on the check-in event.
+
 ## 2026-07-14 — tiptop-e3.1-properties-crud (E3.1)
 
 - **Properties CRUD (plan §3 hosts):** `GET/POST /api/properties`, `GET/PATCH/DELETE /api/properties/:id` — all owner-scoped from the verified session (foreign ids 404, no existence oracle); zod schemas in `lib/server/properties.ts` incl. the turnover `checklist` shape (linens/restock[]/damageReport). DELETE pre-checks bookings → 409 `PROPERTY_IN_USE`, with a duck-typed FK backstop (**finding:** Prisma 6 surfaces `ON DELETE RESTRICT` violations as `PrismaClientUnknownRequestError` with raw PG code 23001, NOT `P2003` — `isForeignKeyViolation` handles both).
