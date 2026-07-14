@@ -14,13 +14,20 @@ export interface SessionClaims {
   uid: string;
   role: AppRole;
   verified: boolean;
+  /** From the Firebase token when present — used to provision the Postgres user row. */
+  email?: string;
 }
 
 // Route prefixes that require an authenticated session. Admin additionally
 // requires the admin role, enforced server-side (middleware can't read claims
 // without verifying, which is Node-only). E0.4 introduces the (app)/(admin)
 // route groups; these URL prefixes are the stable contract.
-export const PROTECTED_PREFIXES = ['/book-service', '/provider-dashboard', '/admin'] as const;
+export const PROTECTED_PREFIXES = [
+  '/book-service',
+  '/provider-dashboard',
+  '/admin',
+  '/properties',
+] as const;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(

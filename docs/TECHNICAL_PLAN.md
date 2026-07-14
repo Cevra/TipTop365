@@ -528,7 +528,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 ### E3 — Customer booking flow end-to-end w/ mock payment (§10.3)
 | ID | Task | Size | Depends |
 |---|---|---|---|
-| E3.1 | Properties CRUD + host checklists UI | M | E1.1 |
+| E3.1 | Properties CRUD + host checklists UI | M | E1.1 | ✅ 2026-07-14 |
 | E3.2 | Booking wizard steps 1–3 (property, service+addons, date/slot + recurring) rebuilt over existing `book-service` page | L | E2.2, E3.1 |
 | E3.3 | Cleaner search & ranking (verified→rating→distance→price) + "first available" option | L | E1.3 |
 | E3.4 | Booking FSM module + `booking_events` + transition tests | L | E1.3 |
