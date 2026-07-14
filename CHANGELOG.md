@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e3.2-booking-wizard (E3.2)
+
+- **Booking wizard steps 1–3 (§11/H1), rebuilt over `book-service`** — the legacy direct-to-Firestore form is gone (D3). Property step (cards from `/api/properties`, incomplete properties flagged not bookable), service+addons step (multiplier badges, qty steppers for per-window/per-hour), date/slot/recurring step (discount badges from live config). Sticky bottom bar with the live `useQuote` range re-quote; **prototype v2 feedback applied: back button in the header, overflow-safe totals.** New `Wizard` i18n namespace (bs/en parity).
+- **`POST /api/bookings`** — creates the draft server-side with a from-scratch reprice (§6). **Scope decision: pre-cleaner drafts store the range-maximum as a provisional ceiling** (schema money columns are non-null; the ceiling is the only number that can't surprise the customer upward) with `pricing_snapshot.kind='range'` carrying both bounds — the exact reprice lands when a cleaner is attached (E3.6 accept / direct select). Recurring choice creates + links the `recurring_plans` row (template addons included; generator = E3.10). Addon rows snapshot hours/price; human-readable `TT-XXXXXX` codes with collision retry. `GET /api/bookings` list included for E3.9.
+- ⚠️ Open plan gap flagged: §5 sequences payment before matching, but §6 prices from the cleaner's rate — what exactly a broadcast booking captures at confirm (ceiling vs. fixed platform price) needs a product decision before E3.6 wires accept-time repricing into confirm.
+- Tests: +3 integration (60 total) — ceiling reprice with exact §6 numbers, recurring plan linkage + discounted totals, incomplete/past/foreign rejections.
+
 ## 2026-07-14 — tiptop-e3.3-cleaner-search (E3.3)
 
 - **Cleaner search & ranking (plan §3 step 5).** Pure comparator `lib/domain/cleanerRanking.ts` — §13 order verified → rating desc → distance asc (haversine) → price asc, with missing data always ranking below known data within a criterion (unrated under rated, unknown distance last — never interleaved by accident). `withinServiceRadius` assumes in-range when coordinates/radius are missing (legacy roster data is sparse; excluding on missing data would hide it).
