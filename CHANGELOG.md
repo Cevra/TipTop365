@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e5.1-ledger-engine (E5.1)
+
+- **Posting engine (plan §7) — the escrow ledger's core, test-first.** Pure layer `lib/domain/ledger/`: `accounts.ts` (the five §7 account types with real double-entry **normal balance sides** — payable grows on credit, receivable on debit, so §7's `net = payable − receivable` reads straight off materialized balances; unknown types throw, D19 growth = extend the map) and `postings.ts` (one balanced-by-construction plan builder per §7 posting-map row: capture, release card/cash, refund+kept-penalty, topup, payout; `validatePlan` enforces positive-integer amounts and Σdebit=Σcredit — the invariants Prisma's DSL can't).
+- **`lib/server/ledger/engine.ts` `post(plan)`:** idempotent replay on the unique key (multi-entry plans replay atomically via derived `key#i`), entries + atomic balance increments in one transaction. **Finding:** account get-or-create must live OUTSIDE the posting tx — in Postgres a caught unique-violation still aborts the enclosing transaction (Prisma exposes no savepoints), so the create-race recovery deadlocked the first implementation; pre-created identity rows are harmless on rollback.
+- **Money-policy note (flagged, not invented):** §7's "late-cancel penalty split cleaner/revenue per config" has no config column yet — the kept penalty conservatively books to `platform_revenue` as an `adjustment`; compensating the cleaner later is an explicit adjustment posting once the split is decided. Never invents a payout.
+- Tests: +10 unit (182 total — every §7 row's accounts/amounts/kinds, validation invariants), +8 integration (capture→release drains escrow to the fening, replay no-ops single+multi-entry, cash commission debt + negative net, refund/kept split, same-key race → exactly one applies, parallel different postings lose nothing, Σ-per-tx + positive-integer invariant over everything written).
+
 ## 2026-07-15 — tiptop-e3.10-recurring-generator (E3.10)
 
 - **Recurring plans materializer (§5 note: daily job, 14 days ahead, one `bookings` row per occurrence).** Pure `lib/domain/recurring.ts` (`nextRunDate` — monthly clamps Jan 31 → Feb 28 instead of skipping into March; `isDue` horizon check) + `lib/server/bookings/generateRecurring.ts`: due plans get a draft (server-repriced range ceiling with the recurring discount, addon template snapshotted), plan advances only after a successful occurrence — **idempotent two ways** ((plan, scheduledAt) existence check + forward-only nextRunDate), incomplete properties are reported and never advanced past, per-plan hop cap guards corrupt dates.
