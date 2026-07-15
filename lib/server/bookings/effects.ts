@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Booking } from '@prisma/client';
 import type { SideEffect } from '@/lib/domain/bookingFsm';
-import { refundPlan, releasePlan } from '@/lib/domain/ledger/postings';
+import { partialPlan, refundPlan, releasePlan } from '@/lib/domain/ledger/postings';
 import { post } from '@/lib/server/ledger/engine';
 
 // FSM side-effect executor (E5.2): turns the descriptors the transition table
@@ -38,8 +38,12 @@ export async function executeSideEffects(
         break;
       }
       case 'ledger.partial': {
-        // Dispute partial resolution needs resolution_amount_f — E5.6 wires it.
-        console.warn(`ledger.partial for booking ${booking.id} deferred to E5.6`);
+        // E5.6: refund ctx.refundF, remainder cleaner-first. Shares the
+        // `release:<bookingId>` key with full release — one payout per job.
+        if (ctx.refundF === undefined) {
+          throw new Error(`ledger.partial for ${booking.id} requires effectCtx.refundF`);
+        }
+        await post(partialPlan(toMoney(booking), ctx.refundF));
         break;
       }
       case 'payout_freeze': {

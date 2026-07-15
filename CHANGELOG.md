@@ -2,6 +2,12 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e5.6-dispute-postings (E5.6)
+
+- **Dispute resolution money (§5/§7/H8).** `partialPlan` (new posting): refund X to the customer, remainder distributed **cleaner-first** — the cleaner's earned share fills before the platform takes any fee, the platform absorbs shortfalls (worker-protective; documented decision, §7's "split per config" column still pending). Partial shares the `release:<bookingId>` idempotency key with full release, so **no resolution path can ever pay a job twice**. `ledger.partial` executor implemented (was E5.6-deferred).
+- **`POST /api/admin/disputes/:id/resolve`** (`release`/`refund`/`partial{partialRefundF}` + notes): role-gated, updates the dispute row (`resolution_amount_f`, `resolved_by`), rides the FSM edge for postings, PSP-refunds the refunded part, `audit()`s every resolution (the E9.1 sink persists it). `GET /api/admin/disputes` queue for E8.2's UI.
+- Tests: +5 unit (196 total — waterfall math incl. discount + key sharing), +3 integration (partial balances + audit row, full refund, guards: 403/400/double-resolve 409). Note: vitest suites must call `registerPrismaAuditSink()` explicitly — `instrumentation.ts` only runs in the real server.
+
 ## 2026-07-15 — tiptop-e5.3-cash-wallet (E5.3)
 
 - **Cash model closed (§7 Bolt/Uber):** `lib/server/wallet.ts` (`walletStatus` — payable/receivable/net vs the city config's `negative_balance_limit_f`, default −50 KM), block check wired into `acceptOffer` **before the race** (`CLEANER_BLOCKED_NEGATIVE_BALANCE` 409 — a blocked cleaner can't win a broadcast), `GET /api/wallet` (E5.4 UI reads it), `POST /api/wallet/topup` (mock card → payments row → §7 topup posting; client-supplied `intentId` for replay-safe retries).
