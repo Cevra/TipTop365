@@ -149,6 +149,18 @@
     "auditEntity": "Objekt",
     "auditSystem": "sistem",
     "auditPrev": "Prethodna",
-    "auditNext": "Sljedeća"
+    "auditNext": "Sljedeća",
+    "verificationTitle": "Verifikacija čistačica",
+    "verificationCount": "{count} otvorenih prijava",
+    "verificationEmpty": "Nema otvorenih prijava.",
+    "verificationStatus_applied": "prijavljena",
+    "verificationStatus_interview_scheduled": "intervju zakazan",
+    "verificationStatus_checklist": "provjera u toku",
+    "verificationInterviewAt": "Termin intervjua",
+    "verificationSchedule": "Zakaži intervju",
+    "verificationChecklistOk": "Provjera uredna (ID + reference)",
+    "verificationApprove": "Odobri ✓",
+    "verificationRejectReason": "Razlog odbijanja",
+    "verificationReject": "Odbij"
   }
 }

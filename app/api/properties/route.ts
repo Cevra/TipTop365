@@ -10,6 +10,8 @@ import {
 } from '@/lib/server/properties';
 
 export const runtime = 'nodejs';
+// Session cookie read → never statically prerenderable.
+export const dynamic = 'force-dynamic';
 
 /** GET /api/properties — the caller's saved properties, newest first. */
 export const GET = handler(async () => {

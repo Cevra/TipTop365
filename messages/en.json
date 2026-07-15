@@ -149,6 +149,18 @@
     "auditEntity": "Entity",
     "auditSystem": "system",
     "auditPrev": "Previous",
-    "auditNext": "Next"
+    "auditNext": "Next",
+    "verificationTitle": "Cleaner verification",
+    "verificationCount": "{count} open applications",
+    "verificationEmpty": "No open applications.",
+    "verificationStatus_applied": "applied",
+    "verificationStatus_interview_scheduled": "interview scheduled",
+    "verificationStatus_checklist": "checklist in progress",
+    "verificationInterviewAt": "Interview time",
+    "verificationSchedule": "Schedule interview",
+    "verificationChecklistOk": "Checklist OK (ID + references)",
+    "verificationApprove": "Approve ✓",
+    "verificationRejectReason": "Rejection reason",
+    "verificationReject": "Reject"
   }
 }

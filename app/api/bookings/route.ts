@@ -8,6 +8,8 @@ import { prisma } from '@/lib/server/db';
 import { computeQuote } from '@/lib/server/pricing';
 
 export const runtime = 'nodejs';
+// Session cookie read → never statically prerenderable.
+export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
   propertyId: z.string().min(1),

@@ -6,6 +6,8 @@ import { ApiError } from '@/lib/server/http';
 import { loadActiveConfig } from '@/lib/server/pricing';
 
 export const runtime = 'nodejs';
+// Reads request URL/headers → never statically prerenderable.
+export const dynamic = 'force-dynamic';
 
 const querySchema = z.object({ city: z.string().min(1).default('sarajevo') });
 

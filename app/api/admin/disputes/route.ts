@@ -3,6 +3,8 @@ import { requireRole } from '@/lib/server/auth/session';
 import { prisma } from '@/lib/server/db';
 
 export const runtime = 'nodejs';
+// Session cookie read → never statically prerenderable.
+export const dynamic = 'force-dynamic';
 
 /** GET /api/admin/disputes — open/investigating queue (E8.2 builds the UI). */
 export const GET = handler(async () => {

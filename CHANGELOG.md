@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e9.3-verification (E9.3)
+
+- **Verification pipeline (§2/§8):** `POST /api/verification/apply` (cleaner self-applies, one open application), admin queue `GET /api/admin/verification`, and `PATCH /api/admin/verification/:id` with ops `schedule → checklist → approve/reject`. **Approve requires `id_verified` on the checklist** (§2 "ID-checked badge"), then in one transaction grants `tier=verified` + `verified_at` + `id_checked` and calls the single authoritative claims writer (`setUserClaims` — sessions carry `verified: true` after token refresh, D4). Every op audited; closed applications immutable.
+- `/admin/verification` queue page in the admin shell (schedule/checklist/approve/reject row actions, bs/en).
+- **Build hygiene:** all session/request-reading GET routes marked `force-dynamic` — Next was attempting static prerender at build time and logging fallback errors through the 500 handler (noise in Sentry-to-be).
+- Tests: +2 integration (full pipeline incl. premature-approve rejection, claims-writer assertion, audit trail, closed-application guard; reject path leaves tier/claims untouched). Totals: 196 unit / 94 integration.
+
 ## 2026-07-15 — tiptop-e4.8-autoconfirm-reviews (E4.8)
 
 - **48 h auto-confirm cron** (`POST /api/jobs/auto-confirm`, hourly): completes `pending_completion` bookings past the **snapshotted config version's** `auto_confirm_hours`, clock starting at the cleaner's Finish event — release postings ride the existing E5.2 executor. Bookings with no event trail are never auto-moved.
