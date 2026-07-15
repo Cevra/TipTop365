@@ -2,6 +2,12 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e7.3-day-limits (E7.3)
+
+- **Day-limit domain `lib/domain/dayLimits/` (plan §8.1/§8.3) — pure, statutory numbers pinned by test:** FBiH 60 / student 180 (+ ≤2 contracts/yr) / RS 90 / Brčko 60 (admin-overridable) / obrt unlimited (self-billing path). `usedDays` counts DISTINCT days (multi-visit day = 1), `evaluateDayLimit` → 80 % warn / 100 % block + remaining days, `wouldConsumeDay` for acceptance pre-checks. ⚠ Regulatory numbers carry the same "verify with accountant/lawyer" watermark as the contract layer.
+- `lib/server/dayLimits.ts`: `recordWorkDay` (idempotent via the DB unique — second same-day visit returns `counted: false`), `checkDayLimit`. **Regime-switch semantics (documented decision):** all engaged days that year count against the CURRENT regime's limit — a mid-year paperwork change never resets days worked. Wiring into offer visibility/acceptance + the warning job is E7.5, per the task split.
+- Tests: +9 unit (191 total — statutory table, unique-day + year boundary, all thresholds incl. Brčko override, student contract cap, obrt unlimited), +1 integration (DB idempotency + regime-switch readout).
+
 ## 2026-07-15 — tiptop-e5.2-fsm-postings (E5.2)
 
 - **FSM side effects → §7 postings.** `lib/server/bookings/effects.ts` executes the descriptors after the status transaction commits: `ledger.release` (card: escrow→wallet + escrow→revenue; cash: the §7 commission-debt row instead), `ledger.refund` (route-computed refund escrow→cash + kept penalty escrow→revenue; skipped for cash — nothing was captured), `rematch` (re-broadcasts offers on cleaner cancel), `payout_freeze` (correctly nothing — release simply never fires while disputed). `ledger.partial` deliberately deferred to E5.6 (needs `resolution_amount_f`).
