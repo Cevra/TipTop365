@@ -105,48 +105,10 @@ export async function acceptOffer(offerId: string, cleanerUserId: string) {
   });
 
   // Winner path: exact reprice against the SNAPSHOTTED config version.
-  const configRow = await prisma.pricingConfig.findUnique({
-    where: {
-      cityId_version: {
-        cityId: offer.booking.property.cityId!,
-        version: offer.booking.pricingConfigVersion,
-      },
-    },
-  });
-  if (!configRow) throw new ApiError('PRICING_CONFIG_NOT_FOUND', 500);
-  const cfg = parsePricingConfig(configRow);
-
-  const exact = buildQuote({
-    m2: offer.booking.property.sizeM2!,
-    serviceTypeKey: offer.booking.serviceType.key,
-    durationMultiplier: offer.booking.serviceType.durationMultiplier,
-    addons: offer.booking.addons.map((a) => ({ key: a.addon.key, hours: a.hoursSnapshot, qty: a.qty })),
-    rateF: offer.cleaner.hourlyRateF,
-    cfg,
-    opts: {
-      paymentMethod: offer.booking.paymentMethod,
-      recurring: (offer.booking.recurringPlanId
-        ? (await prisma.recurringPlan.findUnique({ where: { id: offer.booking.recurringPlanId } }))?.frequency
-        : undefined) as 'weekly' | 'biweekly' | 'monthly' | undefined,
-    },
-  });
+  const repriceData = await buildExactReprice(offer.bookingId, offer.cleanerId, offer.cleaner.hourlyRateF);
 
   const [booking] = await prisma.$transaction([
-    prisma.booking.update({
-      where: { id: offer.bookingId },
-      data: {
-        cleanerId: offer.cleanerId,
-        estHours: exact.estHours,
-        cleanerRateF: exact.rateF,
-        cleanerAmountF: exact.cleanerAmountF,
-        serviceFeeF: exact.serviceFeeF,
-        cashFeeF: exact.cashFeeF,
-        discountF: exact.discountF,
-        totalF: exact.totalF,
-        slotMinutes: Math.ceil(exact.estHours * 60),
-        pricingSnapshot: JSON.parse(JSON.stringify({ kind: 'exact', ...exact })),
-      },
-    }),
+    prisma.booking.update({ where: { id: offer.bookingId }, data: repriceData }),
     prisma.bookingOffer.update({ where: { id: offerId }, data: { status: 'accepted' } }),
     prisma.bookingOffer.updateMany({
       where: { bookingId: offer.bookingId, id: { not: offerId }, status: { in: ['offered', 'seen'] } },
@@ -155,6 +117,59 @@ export async function acceptOffer(offerId: string, cleanerUserId: string) {
   ]);
 
   return booking;
+}
+
+/**
+ * Exact §6 reprice of a booking for a specific cleaner's rate against the
+ * booking's SNAPSHOTTED config version. Shared by first-accept (above) and
+ * admin reassignment (E9.5) — one reprice implementation, ever.
+ */
+export async function buildExactReprice(bookingId: string, cleanerProfileId: string, rateF: number) {
+  const booking = await prisma.booking.findUniqueOrThrow({
+    where: { id: bookingId },
+    include: {
+      property: true,
+      serviceType: true,
+      addons: { include: { addon: true } },
+      recurringPlan: { select: { frequency: true } },
+    },
+  });
+  if (!booking.property.cityId || !booking.property.sizeM2) {
+    throw new ApiError('PROPERTY_INCOMPLETE', 409);
+  }
+  const configRow = await prisma.pricingConfig.findUnique({
+    where: {
+      cityId_version: { cityId: booking.property.cityId, version: booking.pricingConfigVersion },
+    },
+  });
+  if (!configRow) throw new ApiError('PRICING_CONFIG_NOT_FOUND', 500);
+  const cfg = parsePricingConfig(configRow);
+
+  const exact = buildQuote({
+    m2: booking.property.sizeM2,
+    serviceTypeKey: booking.serviceType.key,
+    durationMultiplier: booking.serviceType.durationMultiplier,
+    addons: booking.addons.map((a) => ({ key: a.addon.key, hours: a.hoursSnapshot, qty: a.qty })),
+    rateF,
+    cfg,
+    opts: {
+      paymentMethod: booking.paymentMethod,
+      recurring: booking.recurringPlan?.frequency,
+    },
+  });
+
+  return {
+    cleanerId: cleanerProfileId,
+    estHours: exact.estHours,
+    cleanerRateF: exact.rateF,
+    cleanerAmountF: exact.cleanerAmountF,
+    serviceFeeF: exact.serviceFeeF,
+    cashFeeF: exact.cashFeeF,
+    discountF: exact.discountF,
+    totalF: exact.totalF,
+    slotMinutes: Math.ceil(exact.estHours * 60),
+    pricingSnapshot: JSON.parse(JSON.stringify({ kind: 'exact', ...exact })),
+  };
 }
 
 /** Expire open offers and time out stuck matchings (§5: slot − 6 h). Cron. */

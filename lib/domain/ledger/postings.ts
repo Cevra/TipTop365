@@ -218,6 +218,33 @@ export function partialPlan(booking: BookingMoney, refundF: number): PostingPlan
   return { idempotencyKey: `release:${booking.id}`, bookingId: booking.id, entries };
 }
 
+/**
+ * E9.5: admin manual (goodwill) refund. Pre-settlement the money still sits in
+ * escrow; post-settlement (completed/refunded/cancelled) escrow is drained, so
+ * the refund is a revenue reversal. `source` is decided by the route from the
+ * booking's status — the plan builder just enforces the accounting.
+ */
+export function manualRefundPlan(
+  bookingId: string,
+  amountF: number,
+  source: 'escrow' | 'revenue',
+  ref: string,
+): PostingPlan {
+  return {
+    idempotencyKey: `refund:manual:${ref}`,
+    bookingId,
+    entries: [
+      {
+        debit: source === 'escrow' ? CUSTOMER_ESCROW : PLATFORM_REVENUE,
+        credit: PLATFORM_CASH,
+        amountF,
+        kind: 'refund',
+        memo: `Manual refund (${source} source)`,
+      },
+    ],
+  };
+}
+
 /** §7: Cleaner top-up — platform_cash D / cleaner_receivable C. */
 export function topupPlan(cleanerId: string, amountF: number, paymentId: string): PostingPlan {
   return {
