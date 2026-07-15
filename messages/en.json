@@ -274,5 +274,23 @@
     "actionError": "Action failed.",
     "loadError": "Loading failed.",
     "manualRefund": "Manual refund (support)"
+  },
+  "AdminPayouts": {
+    "title": "Payouts",
+    "prepare": "Prepare weekly run",
+    "prepared": "Prepared: {count} payouts.",
+    "runExists": "A run for this week already exists.",
+    "summary": "{count} payouts",
+    "status_draft": "Draft",
+    "status_exported": "Exported",
+    "status_paid": "Paid",
+    "exportCsv": "Bank CSV",
+    "markPaid": "Mark paid",
+    "markPaidTitle": "Mark {week} as paid?",
+    "markPaidDescription": "Posts the payout entries ({total}) and drains wallets. Do this only AFTER the bank upload.",
+    "cancel": "Cancel",
+    "paid": "Marked as paid.",
+    "actionError": "Action failed.",
+    "loadError": "Loading failed."
   }
 }

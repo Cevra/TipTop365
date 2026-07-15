@@ -274,5 +274,23 @@
     "actionError": "Radnja nije uspjela.",
     "loadError": "Učitavanje nije uspjelo.",
     "manualRefund": "Ručni povrat (podrška)"
+  },
+  "AdminPayouts": {
+    "title": "Isplate",
+    "prepare": "Pripremi sedmičnu isplatu",
+    "prepared": "Pripremljeno: {count} isplata.",
+    "runExists": "Isplata za ovu sedmicu već postoji.",
+    "summary": "{count} isplata",
+    "status_draft": "Nacrt",
+    "status_exported": "Izvezeno",
+    "status_paid": "Isplaćeno",
+    "exportCsv": "CSV za banku",
+    "markPaid": "Označi isplaćeno",
+    "markPaidTitle": "Označiti {week} kao isplaćeno?",
+    "markPaidDescription": "Knjiže se isplatna knjiženja ({total}) i novčanici se prazne. Uraditi tek NAKON upload-a u banku.",
+    "cancel": "Odustani",
+    "paid": "Označeno kao isplaćeno.",
+    "actionError": "Radnja nije uspjela.",
+    "loadError": "Učitavanje nije uspjelo."
   }
 }
