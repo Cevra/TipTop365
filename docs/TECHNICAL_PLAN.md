@@ -556,7 +556,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 ### E5 — Escrow ledger, wallets, payouts, cash (§10.5) — **high-risk, test-first**
 | ID | Task | Size | Depends |
 |---|---|---|---|
-| E5.1 | **`lib/domain/ledger/`: posting engine, idempotency, balanced-tx invariant — full unit + integration suite (every §7 posting, replay safety, concurrent postings)** | L | E1.4 |
+| E5.1 | **`lib/domain/ledger/`: posting engine, idempotency, balanced-tx invariant — full unit + integration suite (every §7 posting, replay safety, concurrent postings)** | L | E1.4  ✅ 2026-07-15 |
 | E5.2 | Wire FSM hooks → postings (capture, release, refund tiers, penalty split) | M | E5.1, E3.4 |
 | E5.3 | Cash jobs: commission debt, negative-balance block, top-up (mock) | M | E5.1 |
 | E5.4 | Cleaner wallet UI (balance, debt, history) | M | E5.2 |
