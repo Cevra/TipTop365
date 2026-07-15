@@ -29,6 +29,7 @@ export async function verifySession(cookie: string | undefined): Promise<Session
       role: (decoded.role as AppRole) ?? 'customer',
       verified: Boolean(decoded.verified),
       email: decoded.email,
+      impersonatedBy: typeof decoded.impersonatedBy === 'string' ? decoded.impersonatedBy : undefined,
     };
   } catch {
     return null;

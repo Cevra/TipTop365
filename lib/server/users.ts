@@ -11,7 +11,11 @@ import type { SessionClaims } from '@/lib/shared/access';
 
 export async function requireDbUser(session: SessionClaims): Promise<User> {
   const existing = await prisma.user.findUnique({ where: { firebaseUid: session.uid } });
-  if (existing) return existing;
+  if (existing) {
+    // E9.4: suspension bites here — one gate covers every authenticated route.
+    if (existing.status === 'suspended') throw new ApiError('USER_SUSPENDED', 403);
+    return existing;
+  }
 
   if (!session.email) {
     // No email on the token and no backfilled row — cannot provision a unique row.
