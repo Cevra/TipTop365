@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e4.8-autoconfirm-reviews (E4.8)
+
+- **48 h auto-confirm cron** (`POST /api/jobs/auto-confirm`, hourly): completes `pending_completion` bookings past the **snapshotted config version's** `auto_confirm_hours`, clock starting at the cleaner's Finish event — release postings ride the existing E5.2 executor. Bookings with no event trail are never auto-moved.
+- **`POST /api/bookings/:id/confirm-completion`** — customer approval endpoint (the H4 button lands with E3.9).
+- **Mutual reviews (`POST /api/bookings/:id/review`), double-blind:** either party, once, completed bookings only; hidden until both directions exist, then both reveal and the cleaner's `rating_avg/count` recompute from all visible customer reviews. The reveal-window fallback (publish after N days if one side never reviews) + review UI = E8.1, per the task split.
+- Tests: +4 integration (stale-vs-fresh auto-confirm against the snapshot window, cron auth, blind→reveal→aggregate flow incl. duplicate/foreign/not-completed guards).
+
 ## 2026-07-15 — tiptop-e5.6-dispute-postings (E5.6)
 
 - **Dispute resolution money (§5/§7/H8).** `partialPlan` (new posting): refund X to the customer, remainder distributed **cleaner-first** — the cleaner's earned share fills before the platform takes any fee, the platform absorbs shortfalls (worker-protective; documented decision, §7's "split per config" column still pending). Partial shares the `release:<bookingId>` idempotency key with full release, so **no resolution path can ever pay a job twice**. `ledger.partial` executor implemented (was E5.6-deferred).
