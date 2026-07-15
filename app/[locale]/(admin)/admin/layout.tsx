@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     { href: '/admin/users', label: t('navUsers'), ready: false }, // E9.4
     { href: '/admin/bookings', label: t('navBookings'), ready: false }, // E9.5
     { href: '/admin/payouts', label: t('navPayouts'), ready: false }, // E5.5
-    { href: '/admin/pricing', label: t('navPricing'), ready: false }, // E2.3
+    { href: '/admin/pricing', label: t('navPricing'), ready: true },
   ];
 
   return (
