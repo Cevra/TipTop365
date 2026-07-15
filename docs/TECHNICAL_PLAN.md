@@ -575,7 +575,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 ### E7 — Contracts & day limits (§10.6) — **high-risk, test-first**
 | ID | Task | Size | Depends |
 |---|---|---|---|
-| E7.1 | Contract templates seed (FBiH / FBiH-student / RS / Brčko / obrt-selfbill × bs/en, watermarked DRAFT) + admin editor | L | E1.5, E9.1 |
+| E7.1 | Contract templates seed (FBiH / FBiH-student / RS / Brčko / obrt-selfbill × bs/en, watermarked DRAFT) + admin editor | L | E1.5, E9.1  ✅ 2026-07-16 |
 | E7.2 | PDF render service (headless Chromium), hash, archive, e-accept endpoints wired into confirm/accept | L | E7.1 |
 | E7.3 | **`lib/domain/dayLimits/`: counting (unique days), regimes 60/180/90, student contract-count ≤2, 80 % warn / 100 % block — full unit suite incl. year boundary + regime switch** | L | E1.5  ✅ 2026-07-15 |
 | E7.4 | Legal-profile onboarding step (regime, student proof upload, obrt number) + obrt self-billing invoice path | M | E7.3, E4.1 |

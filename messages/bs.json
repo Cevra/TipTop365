@@ -161,7 +161,8 @@
     "verificationChecklistOk": "Provjera uredna (ID + reference)",
     "verificationApprove": "Odobri ✓",
     "verificationRejectReason": "Razlog odbijanja",
-    "verificationReject": "Odbij"
+    "verificationReject": "Odbij",
+    "navContracts": "Ugovori"
   },
   "AdminPricing": {
     "title": "Cjenovnik",
@@ -291,6 +292,20 @@
     "cancel": "Odustani",
     "paid": "Označeno kao isplaćeno.",
     "actionError": "Radnja nije uspjela.",
+    "loadError": "Učitavanje nije uspjelo."
+  },
+  "AdminContracts": {
+    "title": "Ugovori — šabloni",
+    "subtitle": "Sadržaj je vlasništvo pravnika: svaka verzija nosi NACRT vodeni žig dok se ne odobri. Odobrenje se bilježi u audit log.",
+    "template": "Šablon",
+    "approve": "Označi kao pravno odobreno",
+    "revokeApproval": "Povuci odobrenje",
+    "editor": "HTML (v{version} — spremanje pravi novu verziju)",
+    "saveNewVersion": "Sačuvaj kao novu verziju",
+    "preview": "Pregled s primjer-podacima",
+    "saved": "Sačuvano kao v{version}.",
+    "approvalChanged": "Status odobrenja promijenjen.",
+    "saveError": "Spremanje nije uspjelo.",
     "loadError": "Učitavanje nije uspjelo."
   }
 }

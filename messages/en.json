@@ -161,7 +161,8 @@
     "verificationChecklistOk": "Checklist OK (ID + references)",
     "verificationApprove": "Approve ✓",
     "verificationRejectReason": "Rejection reason",
-    "verificationReject": "Reject"
+    "verificationReject": "Reject",
+    "navContracts": "Contracts"
   },
   "AdminPricing": {
     "title": "Pricing",
@@ -291,6 +292,20 @@
     "cancel": "Cancel",
     "paid": "Marked as paid.",
     "actionError": "Action failed.",
+    "loadError": "Loading failed."
+  },
+  "AdminContracts": {
+    "title": "Contracts — templates",
+    "subtitle": "Lawyer-owned content: every version carries the DRAFT watermark until approved. Approval is audit-logged.",
+    "template": "Template",
+    "approve": "Mark legally approved",
+    "revokeApproval": "Revoke approval",
+    "editor": "HTML (v{version} — saving creates a new version)",
+    "saveNewVersion": "Save as new version",
+    "preview": "Preview with sample data",
+    "saved": "Saved as v{version}.",
+    "approvalChanged": "Approval status changed.",
+    "saveError": "Saving failed.",
     "loadError": "Loading failed."
   }
 }

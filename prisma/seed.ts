@@ -305,6 +305,27 @@ async function seedWallets(nearLimitCleanerProfileId: string) {
 }
 
 // --- main ------------------------------------------------------------------------
+// E7.1: launch contract templates (5 regimes × bs/en, DRAFT-watermarked,
+// lawyer_approved=false). Idempotent on (key, regime, lang, version=1);
+// admin edits create NEW versions and never touch v1.
+async function seedContractTemplates() {
+  const { launchTemplates } = await import('../lib/domain/contracts/templates');
+  for (const def of launchTemplates()) {
+    await prisma.contractTemplate.upsert({
+      where: {
+        key_legalRegime_lang_version: {
+          key: def.key,
+          legalRegime: def.legalRegime,
+          lang: def.lang,
+          version: 1,
+        },
+      },
+      create: { ...def, version: 1 },
+      update: {},
+    });
+  }
+}
+
 async function main() {
   await seedFlags();
   const { sarajevo, banjaLuka } = await seedCities();
@@ -433,6 +454,7 @@ async function main() {
   });
 
   await seedWallets(cleanerProfiles.mirsad);
+  await seedContractTemplates();
 
   await prisma.promoCode.upsert({
     where: { code: 'DOBRODOSLI10' },
