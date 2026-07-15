@@ -172,6 +172,52 @@ export function refundPlan(
   return { idempotencyKey: `refund:${refundRef}`, bookingId: booking.id, entries };
 }
 
+/**
+ * E5.6: dispute PARTIAL resolution — refund X to the customer, distribute the
+ * remainder cleaner-first: the cleaner's earned share (cleaner_amount −
+ * discount) is filled before the platform takes any fee, i.e. the platform
+ * absorbs the shortfall (worker-protective; documented decision — the §7
+ * "split per config" column still doesn't exist).
+ */
+export function partialPlan(booking: BookingMoney, refundF: number): PostingPlan {
+  if (!booking.cleanerId) throw new InvalidPostingError('partial resolution requires a cleaner');
+  if (!Number.isInteger(refundF) || refundF <= 0 || refundF >= booking.totalF) {
+    throw new InvalidPostingError(
+      `partial refund must be inside (0, ${booking.totalF}), got ${refundF} — use release/refund for the edges`,
+    );
+  }
+  const remainderF = booking.totalF - refundF;
+  const cleanerShareF = Math.min(remainderF, booking.cleanerAmountF - booking.discountF);
+  const revenueShareF = remainderF - cleanerShareF;
+
+  const entries: PlanEntry[] = [
+    {
+      debit: CUSTOMER_ESCROW,
+      credit: PLATFORM_CASH,
+      amountF: refundF,
+      kind: 'refund',
+      memo: 'Dispute partial: customer refund',
+    },
+    {
+      debit: CUSTOMER_ESCROW,
+      credit: cleanerPayable(booking.cleanerId),
+      amountF: cleanerShareF,
+      kind: 'dispute_release',
+      memo: 'Dispute partial: cleaner share (cleaner-first waterfall)',
+    },
+  ];
+  if (revenueShareF > 0) {
+    entries.push({
+      debit: CUSTOMER_ESCROW,
+      credit: PLATFORM_REVENUE,
+      amountF: revenueShareF,
+      kind: 'fee',
+      memo: 'Dispute partial: platform share',
+    });
+  }
+  return { idempotencyKey: `release:${booking.id}`, bookingId: booking.id, entries };
+}
+
 /** §7: Cleaner top-up — platform_cash D / cleaner_receivable C. */
 export function topupPlan(cleanerId: string, amountF: number, paymentId: string): PostingPlan {
   return {
