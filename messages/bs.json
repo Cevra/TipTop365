@@ -195,5 +195,19 @@
     "publishTitle": "Objaviti v{version}?",
     "publishDescription": "Postaje jedina aktivna verzija za grad. Postojeće rezervacije zadržavaju svoju verziju.",
     "loadError": "Učitavanje nije uspjelo."
+  },
+  "AdminDashboard": {
+    "title": "Pregled",
+    "window": "Zadnjih 30 dana",
+    "bookings": "Rezervacije",
+    "bookingsSub": "{open} otvorenih · {cancelled} otkazanih",
+    "gmv": "GMV",
+    "completedCount": "{count} završenih",
+    "commission": "Provizija",
+    "conversion": "Konverzija",
+    "conversionSub": "završene / kreirane",
+    "cleaners": "Aktivne čistačice",
+    "cleanersSub": "{verified} verifikovanih",
+    "disputes": "Otvoreni sporovi"
   }
 }

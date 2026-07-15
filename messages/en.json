@@ -195,5 +195,19 @@
     "publishTitle": "Publish v{version}?",
     "publishDescription": "Becomes the only active version for the city. Existing bookings keep their snapshotted version.",
     "loadError": "Loading failed."
+  },
+  "AdminDashboard": {
+    "title": "Overview",
+    "window": "Last 30 days",
+    "bookings": "Bookings",
+    "bookingsSub": "{open} open · {cancelled} cancelled",
+    "gmv": "GMV",
+    "completedCount": "{count} completed",
+    "commission": "Commission",
+    "conversion": "Conversion",
+    "conversionSub": "completed / created",
+    "cleaners": "Active cleaners",
+    "cleanersSub": "{verified} verified",
+    "disputes": "Open disputes"
   }
 }
