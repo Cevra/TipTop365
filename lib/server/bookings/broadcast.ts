@@ -89,6 +89,13 @@ export async function acceptOffer(offerId: string, cleanerUserId: string) {
   if (offer.expiresAt.getTime() < Date.now()) throw new ApiError('OFFER_EXPIRED', 409);
   if (offer.cleaner.hourlyRateF === null) throw new ApiError('CLEANER_RATE_MISSING', 409);
 
+  // §7 cash model (E5.3): net balance below the city limit blocks NEW jobs
+  // until top-up. Checked before the race so a blocked cleaner can't win it.
+  const { isCleanerBlocked } = await import('@/lib/server/wallet');
+  if (await isCleanerBlocked(offer.cleanerId)) {
+    throw new ApiError('CLEANER_BLOCKED_NEGATIVE_BALANCE', 409);
+  }
+
   // The booking-status guard inside the FSM applier decides the race.
   await applyBookingTransition({
     bookingId: offer.bookingId,

@@ -71,6 +71,10 @@ async function balance(type: string, ownerId: string | null = null): Promise<num
 
 afterAll(async () => {
   await prisma.ledgerEntry.deleteMany({ where: { txId: { contains: stamp } } });
+  if (realBookingId) {
+    // Belt & braces: any entry that referenced the fixture booking.
+    await prisma.ledgerEntry.deleteMany({ where: { bookingId: realBookingId } });
+  }
   await prisma.walletAccount.deleteMany({ where: { ownerId: { contains: stamp } } });
   await prisma.booking.deleteMany({ where: { code: { contains: stamp } } });
   await prisma.property.deleteMany({ where: { owner: { email: { contains: stamp } } } });
@@ -89,7 +93,9 @@ describe('posting engine (§7)', () => {
     expect(await balance('customer_escrow')).toBe(escrowBefore + 5760);
     expect(await balance('platform_cash')).toBe(cashBefore + 5760);
 
-    const release = await post(releasePlan(booking()));
+    // Key overridden with the stamp so THIS suite's cleanup owns the entries
+    // (the production key is booking-scoped; here bookings are shared fixtures).
+    const release = await post({ ...releasePlan(booking()), idempotencyKey: `release:${stamp}-main` });
     expect(release.replayed).toBe(false);
     expect(release.entryIds).toHaveLength(2);
 

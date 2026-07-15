@@ -2,6 +2,12 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e5.3-cash-wallet (E5.3)
+
+- **Cash model closed (§7 Bolt/Uber):** `lib/server/wallet.ts` (`walletStatus` — payable/receivable/net vs the city config's `negative_balance_limit_f`, default −50 KM), block check wired into `acceptOffer` **before the race** (`CLEANER_BLOCKED_NEGATIVE_BALANCE` 409 — a blocked cleaner can't win a broadcast), `GET /api/wallet` (E5.4 UI reads it), `POST /api/wallet/topup` (mock card → payments row → §7 topup posting; client-supplied `intentId` for replay-safe retries).
+- **Fixes the red CI on `e5e21ad`:** the E5.1 suite posted one release with the production booking-cuid key, so its stamped cleanup missed the entries and the wallet-account delete FK-failed in CI's fresh DB (order-dependent locally); the seed suite's "any positive receivable" assertion also collided with other suites' accounts — now targets Mirsad's account via the seeded entry. One-time sweep removed 9 stray entries/14 accounts from dev Neon. **Full 21-file/85-test integration run green — full-suite runs are now the standing bar for money tasks, single-file runs proved insufficient.**
+- Tests: +1 integration (the whole loop: 2 cash commissions → −52 KM → blocked accept → 3 KM top-up → unblocked accept wins).
+
 ## 2026-07-15 — tiptop-e9.1-admin-shell (E9.1)
 
 - **Admin shell (§10.7):** desktop sidebar layout for the `(admin)` group, role-gated server-side on every request (`requireRole('admin')` in the layout — middleware stays the cheap cookie gate). Nav carries the full E9/E5.5/E2.3 information architecture with not-yet-built modules visibly disabled. New `Admin` i18n namespace (bs/en).

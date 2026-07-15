@@ -82,18 +82,19 @@ describe('seed matches §12.7', () => {
   });
 
   it('has the near-limit cash-debt wallet with its ledger entry', async () => {
-    const receivable = await prisma.walletAccount.findFirst({
-      where: { ownerType: 'cleaner_receivable', balanceF: { gt: 0 } },
-    });
-    expect(receivable).not.toBeNull();
-    // 48 KM debt — near, but not over, the −50 KM default limit (§7).
-    expect(receivable!.balanceF).toBe(4800);
-    expect(receivable!.blocked).toBe(false);
-
+    // Target Mirsad's account via the seeded entry — other test suites create
+    // their own positive receivables, so "any positive receivable" is ambiguous.
     const entry = await prisma.ledgerEntry.findUnique({
       where: { idempotencyKey: 'seed:cash_commission:mirsad' },
+      include: { debitAccount: true },
     });
     expect(entry?.kind).toBe('cash_commission');
     expect(entry?.amountF).toBe(4800);
+
+    const receivable = entry!.debitAccount;
+    expect(receivable.ownerType).toBe('cleaner_receivable');
+    // 48 KM debt — near, but not over, the −50 KM default limit (§7).
+    expect(receivable.balanceF).toBe(4800);
+    expect(receivable.blocked).toBe(false);
   });
 });
