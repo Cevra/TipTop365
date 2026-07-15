@@ -67,6 +67,9 @@ export const POST = handler(async (request: Request, { params }: Ctx) => {
     actor: { type: 'customer', userId: user.id },
     reason,
     meta: { refundPct, refundF },
+    // E5.2: the ledger.refund effect posts escrow→cash (refund) and the kept
+    // penalty escrow→revenue with this exact amount.
+    effectCtx: { refundF, refundRef: `cancel:${booking.id}` },
   });
 
   // Refund the captured card payment (§6 rules); mock provider now, Monri later.

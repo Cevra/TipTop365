@@ -9,6 +9,7 @@ import {
   type BookingAction,
   type SideEffect,
 } from '@/lib/domain/bookingFsm';
+import { executeSideEffects, type EffectContext } from '@/lib/server/bookings/effects';
 
 // Applies an FSM transition (E3.4): status update + append-only booking_events
 // row in ONE transaction, race-safe via a status-guarded update (two competing
@@ -35,8 +36,10 @@ export async function applyBookingTransition(args: {
   meta?: Prisma.InputJsonValue;
   /** Cancellation reason — persisted onto the booking when the edge cancels it. */
   reason?: string;
+  /** Passed to the E5.2 side-effect executor (refund amounts, …). */
+  effectCtx?: EffectContext;
 }): Promise<TransitionResult> {
-  const { bookingId, action, actor, meta, reason } = args;
+  const { bookingId, action, actor, meta, reason, effectCtx } = args;
 
   const current = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!current) throw new ApiError('BOOKING_NOT_FOUND', 404);
@@ -81,6 +84,11 @@ export async function applyBookingTransition(args: {
 
     return tx.booking.findUniqueOrThrow({ where: { id: bookingId } });
   });
+
+  // Post-commit effects (E5.2): §7 postings + rematch. Idempotency-keyed, so
+  // a retry after a crash here can never double-post; a hard failure leaves
+  // the booking transitioned and the posting replayable by ops.
+  await executeSideEffects(booking, [...spec.sideEffects], effectCtx);
 
   return { booking, sideEffects: [...spec.sideEffects] };
 }
