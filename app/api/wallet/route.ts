@@ -5,6 +5,8 @@ import { prisma } from '@/lib/server/db';
 import { walletStatus } from '@/lib/server/wallet';
 
 export const runtime = 'nodejs';
+// Session cookie read → never statically prerenderable.
+export const dynamic = 'force-dynamic';
 
 /** GET /api/wallet — the calling cleaner's balances (E5.4 UI reads this). */
 export const GET = handler(async () => {

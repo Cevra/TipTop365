@@ -4,6 +4,8 @@ import { requireDbUser } from '@/lib/server/users';
 import { prisma } from '@/lib/server/db';
 
 export const runtime = 'nodejs';
+// Session cookie read → never statically prerenderable.
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/offers — the calling cleaner's open offers (offers inbox, E4.2 UI).
