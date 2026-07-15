@@ -209,5 +209,39 @@
     "cleaners": "Active cleaners",
     "cleanersSub": "{verified} verified",
     "disputes": "Open disputes"
+  },
+  "AdminUsers": {
+    "title": "Users",
+    "search": "Search",
+    "searchPlaceholder": "Email or name…",
+    "role": "Role",
+    "roleAll": "All roles",
+    "roleCustomer": "Customer",
+    "roleCleaner": "Cleaner",
+    "roleAdmin": "Admin",
+    "total": "{count} total",
+    "user": "User",
+    "status": "Status",
+    "statusActive": "Active",
+    "statusSuspended": "Suspended",
+    "statusDeleted": "Deleted",
+    "verified": "Verified ✓",
+    "registered": "Registered",
+    "impersonate": "Impersonate",
+    "suspend": "Suspend",
+    "reactivate": "Reactivate",
+    "suspendTitle": "Suspend {email}?",
+    "suspendDescription": "The user loses access to all API calls until reactivated. The action is audit-logged.",
+    "reason": "Reason",
+    "cancel": "Cancel",
+    "statusChanged": "Status changed.",
+    "actionError": "Action failed.",
+    "loadError": "Loading failed."
+  },
+  "Impersonation": {
+    "banner": "Support: you are viewing this account as the user. All actions are logged.",
+    "exit": "Exit",
+    "working": "Signing in…",
+    "error": "Sign-in failed — the token expired or is invalid."
   }
 }

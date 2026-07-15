@@ -595,7 +595,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 | E9.1 | Admin shell: layout, nav, role gate, `audit()` on all mutations, audit-log browser | M | E0.3  ✅ 2026-07-15 |
 | E9.2 | Dashboard metrics (bookings, GMV, commission, active cleaners, conversion) | M | E5.2  ✅ 2026-07-16 |
 | E9.3 | Verification pipeline (queue → interview schedule → checklist → approve/reject → badge) | L | E1.1  ✅ 2026-07-15 |
-| E9.4 | User/cleaner management (search, suspend, edit, impersonate w/ banner + audit) | M | E9.1 |
+| E9.4 | User/cleaner management (search, suspend, edit, impersonate w/ banner + audit) | M | E9.1  ✅ 2026-07-16 |
 | E9.5 | Booking management (view/reassign/cancel, manual refund) | M | E3.4 |
 | E9.6 | City management + feature-flag UI + promo codes + push/email campaign blast | M | E9.1 |
 

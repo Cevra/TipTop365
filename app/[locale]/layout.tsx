@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import '../globals.css';
 import NavBar from '@/app/components/NavBar';
 import Footer from '@/app/components/Footer';
+import { ImpersonationBanner } from '@/app/components/ImpersonationBanner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { routing } from '@/i18n/routing';
 
@@ -52,6 +53,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
             <div className="min-h-screen flex flex-col">
+              <ImpersonationBanner />
               <NavBar />
               <main className="flex-grow">{children}</main>
               <Footer />

@@ -16,6 +16,8 @@ export interface SessionClaims {
   verified: boolean;
   /** From the Firebase token when present — used to provision the Postgres user row. */
   email?: string;
+  /** Admin uid when this session was minted via support impersonation (E9.4). */
+  impersonatedBy?: string;
 }
 
 // Route prefixes that require an authenticated session. Admin additionally

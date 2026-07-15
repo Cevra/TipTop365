@@ -209,5 +209,39 @@
     "cleaners": "Aktivne čistačice",
     "cleanersSub": "{verified} verifikovanih",
     "disputes": "Otvoreni sporovi"
+  },
+  "AdminUsers": {
+    "title": "Korisnici",
+    "search": "Pretraga",
+    "searchPlaceholder": "Email ili ime…",
+    "role": "Uloga",
+    "roleAll": "Sve uloge",
+    "roleCustomer": "Korisnik",
+    "roleCleaner": "Čistačica",
+    "roleAdmin": "Admin",
+    "total": "{count} ukupno",
+    "user": "Korisnik",
+    "status": "Status",
+    "statusActive": "Aktivan",
+    "statusSuspended": "Suspendovan",
+    "statusDeleted": "Obrisan",
+    "verified": "Verifikovana ✓",
+    "registered": "Registrovana",
+    "impersonate": "Impersoniraj",
+    "suspend": "Suspenduj",
+    "reactivate": "Reaktiviraj",
+    "suspendTitle": "Suspendovati {email}?",
+    "suspendDescription": "Korisnik gubi pristup svim API pozivima dok se ne reaktivira. Radnja se bilježi u audit log.",
+    "reason": "Razlog",
+    "cancel": "Odustani",
+    "statusChanged": "Status promijenjen.",
+    "actionError": "Radnja nije uspjela.",
+    "loadError": "Učitavanje nije uspjelo."
+  },
+  "Impersonation": {
+    "banner": "Podrška: pregledavate nalog kao korisnik. Sve radnje se bilježe.",
+    "exit": "Izađi",
+    "working": "Prijava u toku…",
+    "error": "Prijava nije uspjela — token je istekao ili je neispravan."
   }
 }
