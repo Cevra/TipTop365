@@ -2,6 +2,13 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e9.1-admin-shell (E9.1)
+
+- **Admin shell (§10.7):** desktop sidebar layout for the `(admin)` group, role-gated server-side on every request (`requireRole('admin')` in the layout — middleware stays the cheap cookie gate). Nav carries the full E9/E5.5/E2.3 information architecture with not-yet-built modules visibly disabled. New `Admin` i18n namespace (bs/en).
+- **`audit()` → Postgres:** `lib/server/auditSink.ts` registers the Prisma sink from `instrumentation.ts` (node runtime, once per process) — every E0.7-style `audit()` call site now persists to `audit_log` without changing. Sink failures still never throw into the mutation (E0.7 contract, test-proven with an FK-violating actor).
+- **Audit-log browser** at `/admin/audit`: paginated read-only table (when/actor/action/entity/IP), `force-dynamic`.
+- Tests: +2 integration (sink round-trip incl. before/after payloads; never-throws contract).
+
 ## 2026-07-15 — tiptop-e7.3-day-limits (E7.3)
 
 - **Day-limit domain `lib/domain/dayLimits/` (plan §8.1/§8.3) — pure, statutory numbers pinned by test:** FBiH 60 / student 180 (+ ≤2 contracts/yr) / RS 90 / Brčko 60 (admin-overridable) / obrt unlimited (self-billing path). `usedDays` counts DISTINCT days (multi-visit day = 1), `evaluateDayLimit` → 80 % warn / 100 % block + remaining days, `wouldConsumeDay` for acceptance pre-checks. ⚠ Regulatory numbers carry the same "verify with accountant/lawyer" watermark as the contract layer.

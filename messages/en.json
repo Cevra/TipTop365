@@ -129,5 +129,26 @@
     "createdTitle": "Booking {code} created",
     "createdDescription": "Cleaner selection and payment arrive in the next development step — your booking is saved as a draft.",
     "createdBack": "Back to properties"
+  },
+  "Admin": {
+    "title": "Administration",
+    "navDashboard": "Overview",
+    "navAudit": "Audit log",
+    "navVerification": "Verification",
+    "navUsers": "Users",
+    "navBookings": "Bookings",
+    "navPayouts": "Payouts",
+    "navPricing": "Pricing",
+    "comingSoon": "Coming soon",
+    "auditTitle": "Audit log",
+    "auditCount": "{count} entries",
+    "auditEmpty": "No entries yet — admin mutations will appear here.",
+    "auditWhen": "When",
+    "auditActor": "Actor",
+    "auditAction": "Action",
+    "auditEntity": "Entity",
+    "auditSystem": "system",
+    "auditPrev": "Previous",
+    "auditNext": "Next"
   }
 }

@@ -129,5 +129,26 @@
     "createdTitle": "Rezervacija {code} je kreirana",
     "createdDescription": "Izbor čistačice i plaćanje stižu u sljedećem koraku razvoja — vaša rezervacija je sačuvana kao nacrt.",
     "createdBack": "Nazad na nekretnine"
+  },
+  "Admin": {
+    "title": "Administracija",
+    "navDashboard": "Pregled",
+    "navAudit": "Dnevnik izmjena",
+    "navVerification": "Verifikacija",
+    "navUsers": "Korisnici",
+    "navBookings": "Rezervacije",
+    "navPayouts": "Isplate",
+    "navPricing": "Cjenovnik",
+    "comingSoon": "Uskoro",
+    "auditTitle": "Dnevnik izmjena",
+    "auditCount": "{count} zapisa",
+    "auditEmpty": "Još nema zapisa — administratorske izmjene će se pojaviti ovdje.",
+    "auditWhen": "Vrijeme",
+    "auditActor": "Izvršio",
+    "auditAction": "Radnja",
+    "auditEntity": "Objekt",
+    "auditSystem": "sistem",
+    "auditPrev": "Prethodna",
+    "auditNext": "Sljedeća"
   }
 }
