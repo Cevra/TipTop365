@@ -5,6 +5,9 @@ import * as Sentry from '@sentry/nextjs';
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     await import('./sentry.server.config');
+    // E9.1: persist audit() records to audit_log from process start.
+    const { registerPrismaAuditSink } = await import('./lib/server/auditSink');
+    registerPrismaAuditSink();
   }
   if (process.env.NEXT_RUNTIME === 'edge') {
     await import('./sentry.edge.config');
