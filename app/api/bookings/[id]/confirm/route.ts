@@ -8,6 +8,8 @@ import { isEnabled } from '@/lib/server/featureFlags';
 import { getPaymentProvider } from '@/lib/server/payments/mockProvider';
 import { applyBookingTransition } from '@/lib/server/bookings/applyTransition';
 import { broadcastOffers } from '@/lib/server/bookings/broadcast';
+import { capturePlan } from '@/lib/domain/ledger/postings';
+import { post as postToLedger } from '@/lib/server/ledger/engine';
 
 // Best-effort offer dispatch on entering matching (E3.6). Failure must not
 // undo a successful payment — the expire-offers cron and admin tooling can
@@ -109,6 +111,10 @@ export const POST = handler(async (request: Request, { params }: Ctx) => {
       paymentId: payment.id,
     });
   }
+
+  // §7: card captured → platform_cash D / customer_escrow C (E5.2). Keyed on
+  // the payment id, so webhook-driven re-confirmation replays as a no-op.
+  await postToLedger(capturePlan(booking, payment.id));
 
   const { booking: updated } = await applyBookingTransition({
     bookingId: booking.id,

@@ -2,6 +2,12 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-15 — tiptop-e5.2-fsm-postings (E5.2)
+
+- **FSM side effects → §7 postings.** `lib/server/bookings/effects.ts` executes the descriptors after the status transaction commits: `ledger.release` (card: escrow→wallet + escrow→revenue; cash: the §7 commission-debt row instead), `ledger.refund` (route-computed refund escrow→cash + kept penalty escrow→revenue; skipped for cash — nothing was captured), `rematch` (re-broadcasts offers on cleaner cancel), `payout_freeze` (correctly nothing — release simply never fires while disputed). `ledger.partial` deliberately deferred to E5.6 (needs `resolution_amount_f`).
+- Confirm endpoint posts the §7 **capture** row keyed on the payment id; cancel passes its computed `refundF` through the new `effectCtx`. **The single `release:<bookingId>` idempotency key makes double-payment structurally impossible** — dispute-release after a normal release replays as a no-op.
+- Tests: +4 integration (confirm/cancel/FSM suites regress green) — release balances to the fening, cash commission debt, refund+kept split, dispute freeze-then-release exactly once.
+
 ## 2026-07-15 — tiptop-e5.1-ledger-engine (E5.1)
 
 - **Posting engine (plan §7) — the escrow ledger's core, test-first.** Pure layer `lib/domain/ledger/`: `accounts.ts` (the five §7 account types with real double-entry **normal balance sides** — payable grows on credit, receivable on debit, so §7's `net = payable − receivable` reads straight off materialized balances; unknown types throw, D19 growth = extend the map) and `postings.ts` (one balanced-by-construction plan builder per §7 posting-map row: capture, release card/cash, refund+kept-penalty, topup, payout; `validatePlan` enforces positive-integer amounts and Σdebit=Σcredit — the invariants Prisma's DSL can't).

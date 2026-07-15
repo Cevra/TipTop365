@@ -557,7 +557,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 | ID | Task | Size | Depends |
 |---|---|---|---|
 | E5.1 | **`lib/domain/ledger/`: posting engine, idempotency, balanced-tx invariant — full unit + integration suite (every §7 posting, replay safety, concurrent postings)** | L | E1.4  ✅ 2026-07-15 |
-| E5.2 | Wire FSM hooks → postings (capture, release, refund tiers, penalty split) | M | E5.1, E3.4 |
+| E5.2 | Wire FSM hooks → postings (capture, release, refund tiers, penalty split) | M | E5.1, E3.4  ✅ 2026-07-15 |
 | E5.3 | Cash jobs: commission debt, negative-balance block, top-up (mock) | M | E5.1 |
 | E5.4 | Cleaner wallet UI (balance, debt, history) | M | E5.2 |
 | E5.5 | Payout runs: weekly prep job, bank CSV export, mark-paid, admin UI | L | E5.2, E9.1 |
