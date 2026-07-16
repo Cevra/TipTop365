@@ -162,7 +162,8 @@
     "verificationApprove": "Approve ✓",
     "verificationRejectReason": "Rejection reason",
     "verificationReject": "Reject",
-    "navContracts": "Contracts"
+    "navContracts": "Contracts",
+    "navPlatform": "Platform"
   },
   "AdminPricing": {
     "title": "Pricing",
@@ -315,5 +316,39 @@
     "maskedNotice": "Contact details were masked — communication stays on the platform for your protection (the guarantee and insurance only apply to TipTop365 bookings).",
     "closed": "Chat is closed for this booking.",
     "sendError": "Sending failed. Please try again."
+  },
+  "AdminPlatform": {
+    "title": "Platform",
+    "cities": "Cities",
+    "cleanersShort": "cleaners",
+    "propertiesShort": "properties",
+    "newCity": "New city",
+    "add": "Add",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "flags": "Feature flags",
+    "envOverride": "ENV override: {value}",
+    "turnOn": "Turn on",
+    "turnOff": "Turn off",
+    "promos": "Promo codes",
+    "promoCode": "Code",
+    "promoType": "Type",
+    "promoValue": "Value",
+    "redemptions": "redemptions",
+    "inactive": "Inactive",
+    "campaign": "Campaign",
+    "campaignHint": "Messages are queued (outbox) — delivered once the dispatcher (E10.1) is live.",
+    "audience": "Audience",
+    "audienceAll": "Everyone",
+    "audienceCustomers": "Customers",
+    "audienceCleaners": "Cleaners",
+    "audienceHosts": "Hosts",
+    "channel": "Channel",
+    "campaignTitle": "Title",
+    "campaignBody": "Body",
+    "campaignSend": "Queue",
+    "campaignQueued": "Campaign queued.",
+    "saved": "Saved.",
+    "actionError": "Action failed."
   }
 }

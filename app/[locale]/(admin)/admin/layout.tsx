@@ -20,6 +20,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     { href: '/admin/payouts', label: t('navPayouts'), ready: true },
     { href: '/admin/pricing', label: t('navPricing'), ready: true },
     { href: '/admin/contracts', label: t('navContracts'), ready: true },
+    { href: '/admin/platform', label: t('navPlatform'), ready: true },
   ];
 
   return (
