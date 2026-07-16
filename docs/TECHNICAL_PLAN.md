@@ -612,7 +612,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 |---|---|---|---|
 | E11.1 | Extract ALL legacy strings → `messages/*`, full bs+en pass incl. emails/contracts UI | L | E0.4 |
 | E11.2 | Analytics funnel events + admin conversion widget | M | E9.2 |
-| E11.3 | README rewrite: setup, env vars, seed, demo accounts, architecture pointer | S | E1.6 |
+| E11.3 | README rewrite: setup, env vars, seed, demo accounts, architecture pointer | S | E1.6  ✅ 2026-07-16 |
 | E11.4 | Referral program (codes, credit ledger postings) | M | E5.1 |
 
 ### E12 — Hardening & compliance

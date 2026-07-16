@@ -1,29 +1,68 @@
+# TipTop365
 
-THIS IS OUR FIGMA DESIGN ---------->  https://www.figma.com/design/R40i0zCyGWzdj8m9BGoFt9/TipTop365?node-id=0%3A1&t=K3vQ86aWzMXPPvjt-1
+Two-sided cleaning marketplace for Bosnia & Herzegovina — "Uber for cleaning".
+Customers (households and Airbnb hosts) book vetted cleaners with fixed upfront
+prices; the platform handles escrow, contracts, and payouts.
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+**The build is governed by [docs/TECHNICAL_PLAN.md](docs/TECHNICAL_PLAN.md)** —
+decisions D1–D22, work plan §13, verification gates §18. Progress = CHANGELOG.md
++ the ✅ ticks in §13. Design reference (marketing-era screens):
+[Figma](https://www.figma.com/design/R40i0zCyGWzdj8m9BGoFt9/TipTop365?node-id=0%3A1&t=K3vQ86aWzMXPPvjt-1).
 
-## Getting Started
+## Stack
 
-First, run the development server:
+Next.js 14 (App Router) · TypeScript · Tailwind + Headless UI · **PostgreSQL
+(Neon) + Prisma = system of record** · Firebase = Auth + FCM only (D3) ·
+next-intl (bs default, en) · Vitest + Playwright · Sentry · Vercel Cron jobs.
+Money is **integer fenings** (1 KM = 100 f) everywhere; the double-entry ledger
+in `lib/domain/ledger` + `lib/server/ledger` is the source of financial truth.
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Cevra/TipTop365 && cd TipTop365
+npm install                 # runs prisma generate via postinstall
+cp .env.example .env.local  # fill in the values below
+npm run db:migrate          # apply migrations to your DATABASE_URL
+npm run db:seed             # §12.7 demo data (idempotent)
+npm run dev                 # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment (.env.local)
 
-## Seed & demo accounts (E1.6)
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` / `DIRECT_URL` | Neon Postgres (pooled / unpooled for migrations) |
+| `NEXT_PUBLIC_FIREBASE_*` | Firebase client config (Auth) |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` or `..._PATH` | firebase-admin credentials (sessions, backfill) |
+| `BUNNY_STORAGE_ZONE` / `BUNNY_STORAGE_PASSWORD` / `BUNNY_CDN_HOST` | media storage (server-only) |
+| `CRON_SECRET` | Bearer auth for `/api/jobs/*` (Vercel Cron) |
+| `PAYMENT_PROVIDER` | `mock` (default) until Monri lands (E6) |
+| `SENTRY_DSN` + `SENTRY_*` | error reporting (optional — inert when unset) |
+| `FLAG_<NAME>` | env override for any feature flag (D12), e.g. `FLAG_CASH_PAYMENTS_ENABLED=false` |
 
-`npm run db:seed` populates the database per plan §12.7 (idempotent — safe to
-re-run): Sarajevo + Banja Luka, the service/addon catalog, pricing config v1,
-a promo code (`DOBRODOSLI10`), 10 demo bookings across all statuses, and:
+## Commands
+
+```bash
+npm run dev                # local app
+npm run lint && npm run typecheck
+npm run test               # vitest UNIT (fast, no DB)
+npm run test:integration   # vitest vs Postgres (needs DATABASE_URL)
+npm run test:e2e           # playwright (prod build)
+npm run db:migrate         # prisma migrate dev (wrapped with .env.local)
+npm run db:studio          # inspect data
+npm run db:seed            # full §12.7 seed (idempotent)
+npm run db:backfill:identity   # legacy Firestore → Postgres (dry-run; add -- --commit)
+```
+
+Definition of done for every task: gate commands green + CHANGELOG entry +
+§13 tick (see [CLAUDE.md](CLAUDE.md) for the working rules).
+
+## Seed & demo accounts
+
+`npm run db:seed` creates: Sarajevo + Banja Luka, the service/addon catalog,
+pricing config v1 (8–15 KM/h, 20 % fee), contract templates (DRAFT-watermarked),
+promo `DOBRODOSLI10`, 10 demo bookings across all statuses, and:
 
 | Account | Email | Role |
 |---|---|---|
@@ -31,28 +70,25 @@ a promo code (`DOBRODOSLI10`), 10 demo bookings across all statuses, and:
 | Lejla Kovač | `lejla@demo.tiptop365.ba` | customer |
 | Adnan Hadžić | `adnan@demo.tiptop365.ba` | customer (Airbnb host, 3 properties) |
 | Amina / Selma / Dragana / Jasmin | `<name>@demo.tiptop365.ba` | cleaner (verified; FBiH / student / RS / obrt) |
-| Emir / Mirsad | `<name>@demo.tiptop365.ba` | cleaner (unverified; Mirsad carries a 48 KM cash-commission debt) |
+| Emir / Mirsad | `<name>@demo.tiptop365.ba` | cleaner (unverified; Mirsad carries a 48 KM cash debt) |
 
-Demo users have fake `demo-*` Firebase UIDs — they exist in Postgres for
-fixtures/screens. Linking real Firebase Auth logins to them (so you can sign
-in as these accounts) is part of the E11.3 fresh-machine setup; the full
-README rewrite (env vars, architecture pointers) also lands there.
+Demo users carry fake `demo-*` Firebase UIDs — they exist for fixtures and
+screens. To sign in as one, create a Firebase Auth user with the same email and
+the Postgres row links on first API call (`requireDbUser`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Architecture pointers
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- **Plan & decisions:** [docs/TECHNICAL_PLAN.md](docs/TECHNICAL_PLAN.md) (start at §2 decisions, §13 work plan)
+- **Testing layers:** [docs/TESTING.md](docs/TESTING.md) · **Ops/observability:** [docs/OPS.md](docs/OPS.md)
+- **Domain logic (pure, unit-tested):** `lib/domain/*` — pricing, booking FSM, ledger postings, day limits, cancellation, chat masking, recurring dates
+- **Server glue:** `lib/server/*` — auth/session, posting engine, broadcast matching, payouts, jobs
+- **API surface:** `app/api/*` (zod-validated, `ok`/`fail` envelope) · **Admin:** `/admin` (role-gated, audited)
+- **UI primitives:** `app/components/ui` — see `/styleguide` in dev
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Vercel (Next.js) + Neon (Postgres) + Bunny (media) + Firebase (Auth/FCM).
+CI (GitHub Actions) runs lint/typecheck/unit/build + integration against a
+service-container Postgres with `prisma migrate deploy && prisma db seed`.
+Nightly DB dump and E2E workflows are on-schedule; `/api/jobs/*` endpoints are
+driven by Vercel Cron with `CRON_SECRET`.
