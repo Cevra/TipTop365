@@ -307,5 +307,13 @@
     "approvalChanged": "Approval status changed.",
     "saveError": "Saving failed.",
     "loadError": "Loading failed."
+  },
+  "Chat": {
+    "empty": "No messages yet. Write the first one!",
+    "placeholder": "Message…",
+    "send": "Send",
+    "maskedNotice": "Contact details were masked — communication stays on the platform for your protection (the guarantee and insurance only apply to TipTop365 bookings).",
+    "closed": "Chat is closed for this booking.",
+    "sendError": "Sending failed. Please try again."
   }
 }

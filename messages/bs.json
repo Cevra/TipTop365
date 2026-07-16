@@ -307,5 +307,13 @@
     "approvalChanged": "Status odobrenja promijenjen.",
     "saveError": "Spremanje nije uspjelo.",
     "loadError": "Učitavanje nije uspjelo."
+  },
+  "Chat": {
+    "empty": "Još nema poruka. Napišite prvu!",
+    "placeholder": "Poruka…",
+    "send": "Pošalji",
+    "maskedNotice": "Kontakt podaci su prikriveni — komunikacija ostaje na platformi radi Vaše zaštite (garancija i osiguranje vrijede samo za rezervacije preko TipTop365).",
+    "closed": "Razgovor je zatvoren za ovu rezervaciju.",
+    "sendError": "Slanje nije uspjelo. Pokušajte ponovo."
   }
 }
