@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ok, handler, ApiError } from '@/lib/server/http';
+import { ok, fail, handler, ApiError } from '@/lib/server/http';
+import { rateLimit, RATE_LIMITS } from '@/lib/server/rateLimit';
 import { parseBody } from '@/lib/server/validation';
 import { requireSession } from '@/lib/server/auth/session';
 import { requireDbUser } from '@/lib/server/users';
@@ -44,6 +45,11 @@ type Ctx = { params: { id: string } };
  */
 export const POST = handler(async (request: Request, { params }: Ctx) => {
   const user = await requireDbUser(await requireSession());
+  // E12.3: caps card attempts per user (card-testing protection).
+  const paymentLimit = rateLimit(`payment:${user.id}`, RATE_LIMITS.payment);
+  if (!paymentLimit.allowed) {
+    return fail('RATE_LIMITED', 429, { retryAfterSec: paymentLimit.retryAfterSec });
+  }
   const body = await parseBody(request, bodySchema);
 
   const booking = await prisma.booking.findFirst({

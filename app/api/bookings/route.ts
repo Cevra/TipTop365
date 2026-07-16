@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
-import { ok, handler, ApiError } from '@/lib/server/http';
+import { ok, fail, handler, ApiError } from '@/lib/server/http';
+import { rateLimit, RATE_LIMITS } from '@/lib/server/rateLimit';
 import { parseBody } from '@/lib/server/validation';
 import { requireSession } from '@/lib/server/auth/session';
 import { requireDbUser } from '@/lib/server/users';
@@ -39,6 +40,8 @@ function randomCode(): string {
  */
 export const POST = handler(async (request: Request) => {
   const user = await requireDbUser(await requireSession());
+  const { allowed, retryAfterSec } = rateLimit(`booking:${user.id}`, RATE_LIMITS.booking);
+  if (!allowed) return fail('RATE_LIMITED', 429, { retryAfterSec });
   const body = await parseBody(request, bodySchema);
 
   const property = await prisma.property.findFirst({

@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrismaClient } from '@prisma/client';
 import type { SessionClaims } from '@/lib/shared/access';
 import { __resetMockProvider } from '@/lib/server/payments/mockProvider';
+import { __resetRateLimits } from '@/lib/server/rateLimit';
 
 // Integration (E3.5): confirm endpoint — contract-accept + capture + FSM,
 // against real Postgres with the MockProvider. Session mocked at the
@@ -78,6 +79,7 @@ function confirmRequest(body: unknown): Request {
 beforeEach(() => {
   sessionState.current = customerClaims;
   __resetMockProvider();
+  __resetRateLimits(); // the E12.3 payment cap would trip the suite's total
 });
 
 afterAll(async () => {
