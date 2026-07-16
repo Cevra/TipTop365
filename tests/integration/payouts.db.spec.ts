@@ -30,13 +30,28 @@ async function cleanerWithBalance(suffix: string, balanceF: number, iban: string
 }
 
 afterAll(async () => {
-  await prisma.ledgerEntry.deleteMany({ where: { txId: { contains: stamp } } });
+  // FK order: ledger entries referencing this run's payouts AND this suite's
+  // wallet accounts first, then payouts/run, then accounts, then people.
+  await prisma.ledgerEntry.deleteMany({
+    where: { payout: { payoutRun: { weekLabel: week } } },
+  });
   await prisma.payout.deleteMany({ where: { payoutRun: { weekLabel: week } } });
   await prisma.payoutRun.deleteMany({ where: { weekLabel: week } });
-  await prisma.walletAccount.deleteMany({
-    where: { ownerId: { in: (await prisma.cleanerProfile.findMany({ where: { user: { email: { contains: stamp } } }, select: { id: true } })).map((c) => c.id) } },
+  const cleanerIds = (
+    await prisma.cleanerProfile.findMany({
+      where: { user: { email: { contains: stamp } } },
+      select: { id: true },
+    })
+  ).map((c) => c.id);
+  await prisma.ledgerEntry.deleteMany({
+    where: {
+      OR: [
+        { debitAccount: { ownerId: { in: cleanerIds } } },
+        { creditAccount: { ownerId: { in: cleanerIds } } },
+      ],
+    },
   });
-  await prisma.ledgerEntry.deleteMany({ where: { idempotencyKey: { startsWith: 'payout:' } , memo: { contains: stamp } } }).catch(() => {});
+  await prisma.walletAccount.deleteMany({ where: { ownerId: { in: cleanerIds } } });
   await prisma.cleanerLegalProfile.deleteMany({ where: { cleaner: { email: { contains: stamp } } } });
   await prisma.cleanerProfile.deleteMany({ where: { user: { email: { contains: stamp } } } });
   await prisma.user.deleteMany({ where: { email: { contains: stamp } } });
