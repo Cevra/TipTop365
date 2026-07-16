@@ -162,7 +162,8 @@
     "verificationApprove": "Odobri ✓",
     "verificationRejectReason": "Razlog odbijanja",
     "verificationReject": "Odbij",
-    "navContracts": "Ugovori"
+    "navContracts": "Ugovori",
+    "navPlatform": "Platforma"
   },
   "AdminPricing": {
     "title": "Cjenovnik",
@@ -315,5 +316,39 @@
     "maskedNotice": "Kontakt podaci su prikriveni — komunikacija ostaje na platformi radi Vaše zaštite (garancija i osiguranje vrijede samo za rezervacije preko TipTop365).",
     "closed": "Razgovor je zatvoren za ovu rezervaciju.",
     "sendError": "Slanje nije uspjelo. Pokušajte ponovo."
+  },
+  "AdminPlatform": {
+    "title": "Platforma",
+    "cities": "Gradovi",
+    "cleanersShort": "čistačica",
+    "propertiesShort": "nekretnina",
+    "newCity": "Novi grad",
+    "add": "Dodaj",
+    "activate": "Aktiviraj",
+    "deactivate": "Deaktiviraj",
+    "flags": "Feature flagovi",
+    "envOverride": "ENV override: {value}",
+    "turnOn": "Uključi",
+    "turnOff": "Isključi",
+    "promos": "Promo kodovi",
+    "promoCode": "Kod",
+    "promoType": "Tip",
+    "promoValue": "Vrijednost",
+    "redemptions": "iskorištenja",
+    "inactive": "Neaktivan",
+    "campaign": "Kampanja",
+    "campaignHint": "Poruke se stavljaju u red (outbox) — šalju se kada dispatcher (E10.1) bude aktivan.",
+    "audience": "Publika",
+    "audienceAll": "Svi",
+    "audienceCustomers": "Korisnici",
+    "audienceCleaners": "Čistačice",
+    "audienceHosts": "Hostovi",
+    "channel": "Kanal",
+    "campaignTitle": "Naslov",
+    "campaignBody": "Tekst",
+    "campaignSend": "Stavi u red",
+    "campaignQueued": "Kampanja stavljena u red.",
+    "saved": "Sačuvano.",
+    "actionError": "Radnja nije uspjela."
   }
 }
