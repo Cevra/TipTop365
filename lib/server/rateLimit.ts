@@ -31,6 +31,9 @@ export const RATE_LIMITS = {
   search: { capacity: 30, refillPerSec: 30 / 60 },
   chat: { capacity: 20, refillPerSec: 20 / 60 },
   upload: { capacity: 10, refillPerSec: 10 / 60 },
+  // E12.3: booking creation (draft spam) and payment attempts (card testing).
+  booking: { capacity: 10, refillPerSec: 10 / 60 },
+  payment: { capacity: 5, refillPerSec: 5 / 60 },
 } as const;
 
 /** Test-only: clear all buckets. */

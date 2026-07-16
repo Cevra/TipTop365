@@ -620,7 +620,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 |---|---|---|---|
 | E12.1 | **Retention job tests: pre-job purge on start/+24 h, 90-day proof deletion, tombstones (time-travel fixtures)** | M | E3.7 |
 | E12.2 | Consent screens + versioning + right-to-delete workflow end-to-end | M | E1.5  ✅ 2026-07-16 |
-| E12.3 | Rate limiting on sensitive endpoints + webhook replay protection audit | S | E0.7 |
+| E12.3 | Rate limiting on sensitive endpoints + webhook replay protection audit | S | E0.7  ✅ 2026-07-16 |
 | E12.4 | Security pass: signed-URL TTLs, header hardening, dependency audit, Firestore rules review | M | all |
 | E12.5 | Load-sanity: quote + search endpoints under burst (k6 or Playwright load) | S | E3.3 |
 
