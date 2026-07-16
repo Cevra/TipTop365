@@ -245,6 +245,26 @@ export function manualRefundPlan(
   };
 }
 
+/**
+ * E4.7: approved price-adjustment delta captured before extra work (§5) —
+ * same shape as the original capture, its own idempotency scope.
+ */
+export function adjustmentCapturePlan(bookingId: string, amountF: number, adjustmentId: string): PostingPlan {
+  return {
+    idempotencyKey: `capture:adjustment:${adjustmentId}`,
+    bookingId,
+    entries: [
+      {
+        debit: PLATFORM_CASH,
+        credit: CUSTOMER_ESCROW,
+        amountF,
+        kind: 'capture',
+        memo: 'Price-adjustment delta captured (§5)',
+      },
+    ],
+  };
+}
+
 /** §7: Cleaner top-up — platform_cash D / cleaner_receivable C. */
 export function topupPlan(cleanerId: string, amountF: number, paymentId: string): PostingPlan {
   return {
