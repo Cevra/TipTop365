@@ -2,6 +2,15 @@
 
 One entry per merged PR. Newest first. Format: `## <date> — <branch>` then what changed / breaking / migration notes.
 
+## 2026-07-16 — batch 2: E4.5, E9.6, E12.2, E12.3, E11.3
+
+- **E4.5 `tiptop-e4.5-chat-masking`:** booking chat with §12.4 anti-disintermediation. Pure `maskContacts` (BiH phone shapes incl. separators, emails incl. spelled-out `(at)/(dot)` obfuscations, social handles/platform keywords) — the raw body is never persisted. Party-scoped `POST /:id/chat` (rate-limited); `GET /:id/live` now serves real status + cursor-paginated messages (location = E4.6). 3rd flagged message per sender per booking → audited escalation + admin outbox rows, exactly once. `ChatPanel` (visibility-aware polling) ready for H4. +5 unit / +4 integration.
+- **E9.6 `tiptop-e9.6-platform-admin`:** `/admin/platform` — cities (create w/ diacritics-safe slug, toggle), typed D12 feature-flag panel (default/DB/env-override visibility), promo codes (pct bounds, deactivate), and **campaign blast as D10 outbox enqueue** (one pending row per active target; delivery = E10.1's dispatcher, so staging is safe today and exactly-once later). All audited. +4 integration.
+- **E12.2 `tiptop-e12.2-consents-deletion`:** consent versioning (`POLICY_VERSIONS` — bumping re-prompts; rows append-only w/ IP) + the §8.5 right-to-delete workflow: user request (blocked with bookings in flight) → admin queue → `anonymizeUser` scrubs the person (user, properties, chat bodies, cleaner + legal profile, photo purge queue via `delete_after=epoch`) while bookings/ledger/contracts stay **pseudonymized** for statutory retention; Firebase account deletion best-effort; audited with scrub counts. +4 integration.
+- **E12.3 `tiptop-e12.3-ratelimit-audit`:** audit found 3 unprotected money-adjacent writes — booking create, confirm capture, adjustment approve — now per-user capped (`booking` 10/min, `payment` 5/min = tightest, pinned by unit test). Replay findings recorded: ledger unique idempotency keys + provider replay cache + per-attempt capture keys already make money paths replay-safe; E6.2's Monri webhook must `verifyWebhook` and reuse the same keys. +2 unit / +2 integration.
+- **E11.3 `tiptop-e11.3-readme`:** README rewritten from the create-next-app template to the real thing: stack, setup, env-var table (incl. `CRON_SECRET`, `PAYMENT_PROVIDER`, flag overrides), commands, seed/demo accounts, architecture pointers, deploy topology.
+- Batch gate: lint clean, typecheck clean, 203 unit / 127 integration (35 files), prod build green.
+
 ## 2026-07-16 — batch: E2.3, E9.2, E9.4, E9.5, E5.5, E7.1, E4.7 (entries restored post-merge)
 
 - **E2.3 `tiptop-e2.3-pricing-editor`:** admin pricing editor — drafts validated through the SAME `parsePricingConfig` the quote engine uses (unsaveable ⇒ unquotable impossible), version monotonic per city, publish = exactly-one-active in one tx (the invariant E1.2 deferred), idempotent + audited. `/admin/pricing` UI with prefilled draft form. +3 integration.
