@@ -1,16 +1,16 @@
 import { getSessionUser } from '@/lib/server/auth/session';
 import { ok, fail, handler } from '@/lib/server/http';
+import { requireDbUser } from '@/lib/server/users';
+import { chatMessagesSince, requireChatParty } from '@/lib/server/bookings/chat';
 import type { LiveSnapshot } from '@/lib/shared/realtime';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/bookings/:id/live?cursor=
- * The realtime channel (plan D3 v1.1): booking status + latest location ping +
- * messages since `cursor`. SKELETON — the bookings/chat/location tables land in
- * E1.3 and are wired here in E4.5 (chat) / E4.6 (live map). For now it enforces
- * auth and returns an empty, correctly-shaped snapshot so the client hook and
- * its consumers can be built against the real contract.
+ * GET /api/bookings/:id/live?cursor= — the D3 polling channel: booking status
+ * + chat messages since `cursor` (E4.5). `location` stays null until E4.6
+ * wires location_pings. Party-scoped: only the customer or assigned cleaner.
  */
 export const GET = handler(async (
   request: Request,
@@ -18,17 +18,22 @@ export const GET = handler(async (
 ) => {
   const session = await getSessionUser();
   if (!session) return fail('UNAUTHENTICATED', 401);
-  if (!params.id) return fail('MISSING_BOOKING_ID', 400);
+  const user = await requireDbUser(session);
 
+  const { booking } = await requireChatParty(params.id, user);
   const cursor = new URL(request.url).searchParams.get('cursor');
+  const messages = await chatMessagesSince(booking.id, cursor);
 
-  // TODO(E1.3/E4): load the booking, assert the caller is a party to it, and
-  // return real status/location/messages-since-cursor from Postgres.
   const snapshot: LiveSnapshot = {
-    bookingStatus: null,
-    location: null,
-    messages: [],
-    cursor: cursor ?? null,
+    bookingStatus: booking.status,
+    location: null, // E4.6
+    messages: messages.map((m) => ({
+      id: m.id,
+      senderId: m.senderId,
+      body: m.body,
+      at: m.createdAt.toISOString(),
+    })),
+    cursor: messages.length > 0 ? messages[messages.length - 1].id : cursor,
   };
 
   return ok(snapshot, { headers: { 'Cache-Control': 'no-store' } });

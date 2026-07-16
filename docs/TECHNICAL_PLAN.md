@@ -547,7 +547,7 @@ Ordered per build-prompt §10. Sizes: **S** ≤ ½ day, **M** ≈ 1 day, **L** �
 | E4.2 | Offers inbox + accept/decline + countdown | M | E3.6 |
 | E4.3 | Job execution UI: on-my-way → GPS check-in (≤300 m) → finish | L | E3.4 |
 | E4.4 | Proof photos: min-N-per-room enforcement, before-photos, viewer | M | E3.7 |
-| E4.5 | In-app chat w/ masking + contact detection, realtime via `/live` polling | L | E0.6 |
+| E4.5 | In-app chat w/ masking + contact detection, realtime via `/live` polling | L | E0.6  ✅ 2026-07-16 |
 | E4.6 | Live map (customer view, on-my-way only) — `location_pings` + `/live` | M | E4.3 |
 | E4.7 | Price-adjustment request/approve flow | M | E3.4  ✅ 2026-07-16 |
 | E4.8 | Auto-confirm 48 h job + customer confirm UI + mutual reviews (double-blind) | M | E3.4  ✅ 2026-07-15 |
